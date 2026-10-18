@@ -1,0 +1,251 @@
+/* ─── Theme ─────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: light dark;
+  --bg: #fbfaf7;
+  --surface: #ffffff;
+  --border: #e6e3dd;
+  --text: #1d1d1f;
+  --muted: #7c7c80;
+  --faint: #c4c1bb;
+  --accent: #2f6fde;
+  --good: #2e8b57;
+  --bad: #d23c3c;
+  --bad-bg: #fde8e8;
+  --radius: 10px;
+  --font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-text: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141416;
+    --surface: #1d1d20;
+    --border: #2e2e33;
+    --text: #ececee;
+    --muted: #8e8e93;
+    --faint: #4c4c52;
+    --accent: #6c9cff;
+    --good: #5cc98a;
+    --bad: #ff6b6b;
+    --bad-bg: #3a1f1f;
+  }
+}
+
+/* ─── Base ──────────────────────────────────────────────────────────────── */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 var(--font-ui);
+}
+
+.app {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+h1, h2, h3 { margin: 0; line-height: 1.2; }
+h2 { font-size: 1.4rem; }
+h3 { font-size: 1.1rem; }
+
+.muted { color: var(--muted); }
+.note { color: var(--muted); font-size: 0.85rem; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* The hidden typing field. 16px font stops iOS zooming in when it's focused. */
+.visually-hidden {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+/* ─── Controls ──────────────────────────────────────────────────────────── */
+
+button, .button {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+button:hover, .button:hover { border-color: var(--muted); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger:hover { border-color: var(--bad); color: var(--bad); }
+
+input, textarea {
+  font: inherit;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+textarea { resize: vertical; font-family: var(--font-text); }
+
+kbd {
+  font: 0.75rem var(--font-ui);
+  padding: 1px 5px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.7;
+}
+
+/* ─── Layout pieces ─────────────────────────────────────────────────────── */
+
+.top {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.brand { font-size: 1.5rem; }
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* ─── Library ───────────────────────────────────────────────────────────── */
+
+.cards { list-style: none; padding: 0; margin: 0 0 28px; display: grid; gap: 8px; }
+
+.card { display: flex; gap: 8px; align-items: stretch; }
+
+.card-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.editor {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+/* ─── Practice ──────────────────────────────────────────────────────────── */
+
+.ladder { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.rung { font-size: 0.8rem; padding: 4px 10px; border-radius: 999px; color: var(--muted); }
+.rung:disabled { pointer-events: none; border-color: var(--border); }
+.rung.done { color: var(--good); border-color: var(--good); }
+.rung.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.dots { display: inline-flex; gap: 4px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--good); }
+.dot.filled { background: var(--good); }
+
+.reps { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.9rem; }
+.reps select { font: inherit; padding: 2px 6px; border-radius: 6px; }
+
+.text-box {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: text;
+}
+
+.passage {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  line-height: 2;
+}
+
+.summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--good);
+}
+.summary p { margin: 0; }
+.summary.failed { border-color: var(--bad); }
+
+/* ─── Words: one class per LOOK in components.js ────────────────────────── */
+
+.word { border-radius: 3px; }
+.word.correct { color: var(--text); }
+.word.missed { color: var(--bad); background: var(--bad-bg); }
+.word.upcoming { color: var(--faint); }
+
+.word.blank {
+  display: inline-block;
+  width: calc(var(--letters) * 0.55em);
+  height: 1em;
+  border-bottom: 2px solid var(--faint);
+  vertical-align: -0.15em;
+}
+
+.word.typing { color: var(--accent); }
+.word.typing::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 1px;
+  background: var(--accent);
+  vertical-align: -0.15em;
+  animation: blink 1s steps(1) infinite;
+}
+
+.wrong-letter { color: var(--bad); background: var(--bad-bg); border-radius: 2px; }
+
+/* The word you're on: underlined in the accent colour. */
+.word.current { color: var(--text); box-shadow: 0 2px 0 var(--accent); }
+.word.blank.current { border-bottom-color: var(--accent); box-shadow: none; }
+
+/* A word you just answered types itself out, letter by letter. */
+.word.reveal { animation: type-out calc(var(--letters) * 30ms) steps(var(--letters)) both; }
+
+@keyframes type-out {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .word.reveal, .word.typing::after { animation: none; }
+}

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Memo</title>
+  <meta name="description" content="Memorize any text by typing it: first letters, then fewer hints, then from memory.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Everything inside #app is drawn by src/components.js. -->
+  <div id="app"></div>
+
+  <!-- Invisible field that receives typing during practice. It sits outside
+       #app so re-renders never take its focus away. -->
+  <input id="keyboard" class="visually-hidden" aria-label="Type here"
+         autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+
+  <noscript>Memo needs JavaScript to run.</noscript>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
