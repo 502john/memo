@@ -12,9 +12,7 @@
  *   editingId   passage open in the editor (null = adding a new one)
  *   run         the current pass through the text (see state.js)
  *   lastResult  RESULT of the run that just finished
- *
- * The next run's step comes from the ladder. On a mastered passage, it stays on
- * the step picked for review instead (the previous run's step).
+ *   listening   whether the mic is answering instead of the keyboard (see speech.js)
  *
  * Typing goes into a hidden <input> (index.html) rather than a keydown
  * listener, because only a focused input opens the on-screen keyboard on phones.
@@ -22,9 +20,11 @@
 
 import { App } from './components.js';
 import { loadSaved, save, downloadBackup, readBackup } from './storage.js';
+import { startListening, stopListening } from './speech.js';
 import {
-  VIEW, RUN, RESULT, STEPS, DEFAULT_REPS, SAMPLE_PASSAGE,
-  createPassage, replacePassage, mergePassages, progressAt, currentStep, isMastered, startRun, typeKey, scoreRun,
+  VIEW, RUN, RESULT, DEFAULT_REPS, SAMPLE_PASSAGE,
+  createPassage, upgradePassage, replacePassage, mergePassages, newProgress, moveToStep, currentStep,
+  startRun, typeKey, sayWord, scoreRun,
 } from './state.js';
 
 const root = document.getElementById('app');
@@ -34,11 +34,12 @@ const saved = loadSaved();
 
 let state = {
   view: VIEW.LIBRARY,
-  passages: saved?.passages ?? [createPassage(SAMPLE_PASSAGE.title, SAMPLE_PASSAGE.text, DEFAULT_REPS)],
+  passages: saved?.passages.map(upgradePassage) ?? [createPassage(SAMPLE_PASSAGE.title, SAMPLE_PASSAGE.text, DEFAULT_REPS)],
   activeId: null,
   editingId: null,
   run: null,
   lastResult: null,
+  listening: false,
 };
 
 function setState(changes) {
@@ -78,8 +79,8 @@ const actions = {
       setState({ passages: [...state.passages, createPassage(title, text, reps)] });
       return;
     }
-    const progress = text === existing.text ? existing.progress : progressAt(0);
-    setState({ passages: replacePassage(state.passages, { ...existing, title, text, progress }), editingId: null });
+    const progress = text === existing.text ? existing.progress : newProgress();
+    setState({ passages: replacePassage(state.passages, { ...existing, title, text, reps, progress }), editingId: null });
   },
 
   deletePassage(id) {
@@ -94,26 +95,23 @@ const actions = {
   async importBackup(file) {
     try {
       const backup = await readBackup(file);
-      setState({ passages: mergePassages(state.passages, backup.passages) });
+      setState({ passages: mergePassages(state.passages, backup.passages.map(upgradePassage)) });
     } catch (error) {
       alert(`Import failed: ${error.message}`);
     }
   },
 
   goToLibrary() {
-    setState({ view: VIEW.LIBRARY, activeId: null, run: null, lastResult: null });
+    stopListening();
+    setState({ view: VIEW.LIBRARY, activeId: null, run: null, lastResult: null, listening: false });
   },
 
   pressKey(char) {
-    const run = typeKey(state.run, char);
-    if (run === state.run) return;
-    if (run.status !== RUN.FINISHED) {
-      setState({ run });
-      return;
-    }
-    const passage = activePassage();
-    const { result, progress } = scoreRun(passage.progress, run, passage.reps);
-    setState({ run, lastResult: result, passages: replacePassage(state.passages, { ...passage, progress }) });
+    advanceRun(typeKey(state.run, char));
+  },
+
+  sayWords(words) {
+    advanceRun(words.reduce(sayWord, state.run));
   },
 
   continueAfterRun() {
@@ -124,8 +122,30 @@ const actions = {
     setState({ run: freshRun(activePassage()), lastResult: null });
   },
 
-  reviewStep(stepIndex) {
-    setState({ run: startRun(activePassage().text, STEPS[stepIndex]), lastResult: null });
+  goToStep(step) {
+    const passage = activePassage();
+    const moved = { ...passage, progress: moveToStep(passage.progress, step) };
+    setState({ passages: replacePassage(state.passages, moved), run: freshRun(moved), lastResult: null });
+  },
+
+  setReps(reps) {
+    setState({ passages: replacePassage(state.passages, { ...activePassage(), reps }) });
+  },
+
+  toggleListening() {
+    if (state.listening) {
+      stopListening();
+      setState({ listening: false });
+      return;
+    }
+    startListening({
+      onWords: actions.sayWords,
+      onBlocked: () => {
+        setState({ listening: false });
+        alert("Microphone access is blocked. Allow it in your browser's site settings to answer out loud.");
+      },
+    });
+    setState({ listening: true });
   },
 
   focusKeyboard() {
@@ -142,8 +162,18 @@ function activePassage() {
 }
 
 function freshRun(passage) {
-  const isReviewing = isMastered(passage.progress) && state.run;
-  return startRun(passage.text, isReviewing ? state.run.step : currentStep(passage.progress));
+  return startRun(passage.text, currentStep(passage.progress));
+}
+
+function advanceRun(run) {
+  if (run === state.run) return;
+  if (run.status !== RUN.FINISHED) {
+    setState({ run });
+    return;
+  }
+  const passage = activePassage();
+  const { result, progress } = scoreRun(passage.progress, run, passage.reps);
+  setState({ run, lastResult: result, passages: replacePassage(state.passages, { ...passage, progress }) });
 }
 
 keyboard.addEventListener('input', () => {

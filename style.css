@@ -151,7 +151,6 @@ kbd {
 
 .ladder { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .rung { font-size: 0.8rem; padding: 4px 10px; border-radius: 999px; color: var(--muted); }
-.rung:disabled { pointer-events: none; border-color: var(--border); }
 .rung.done { color: var(--good); border-color: var(--good); }
 .rung.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
@@ -171,6 +170,13 @@ kbd {
 
 .reps { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.9rem; }
 .reps select { font: inherit; padding: 2px 6px; border-radius: 6px; }
+
+.mic { font-size: 0.8rem; padding: 3px 10px; }
+.mic.listening { border-color: var(--bad); color: var(--bad); animation: pulse 1.4s ease-in-out infinite; }
+
+@keyframes pulse {
+  50% { box-shadow: 0 0 0 4px var(--bad-bg); }
+}
 
 .text-box {
   padding: 20px;
@@ -228,7 +234,7 @@ kbd {
   animation: blink 1s steps(1) infinite;
 }
 
-.wrong-letter { color: var(--bad); background: var(--bad-bg); border-radius: 2px; }
+.wrong-input { color: var(--bad); background: var(--bad-bg); border-radius: 2px; }
 
 /* The word you're on: underlined in the accent colour. */
 .word.current { color: var(--text); box-shadow: 0 2px 0 var(--accent); }
@@ -273,4 +279,5 @@ kbd {
 @media (prefers-reduced-motion: reduce) {
   .word.reveal, .word.typing::after { animation: none; }
   .confetti { display: none; }
+  .mic.listening { animation: none; }
 }
