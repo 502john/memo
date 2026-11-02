@@ -5,7 +5,6 @@
 
 const STORAGE_KEY = 'memo:v2';
 
-/** @returns {{ passages } | null} */
 export function loadSaved() {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -29,7 +28,6 @@ export function downloadBackup({ passages }) {
   link.click();
 }
 
-/** @returns {Promise<{ passages }>} */
 export async function readBackup(file) {
   const data = JSON.parse(await file.text());
   if (!Array.isArray(data?.passages)) throw new Error('This file is not a Memo backup.');

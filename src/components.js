@@ -21,8 +21,6 @@ import {
   currentStep, isMastered,
 } from './state.js';
 
-// ─── App ─────────────────────────────────────────────────────────────────────
-
 const VIEWS = {
   [VIEW.LIBRARY]: Library,
   [VIEW.PRACTICE]: Practice,
@@ -35,8 +33,6 @@ export function App({ state, actions }) {
       el('span', { class: 'muted' }, 'memorize anything by typing it')),
     VIEWS[state.view]({ state, actions }));
 }
-
-// ─── Library ─────────────────────────────────────────────────────────────────
 
 function Library({ state, actions }) {
   const editing = state.passages.find((passage) => passage.id === state.editingId);
@@ -106,10 +102,8 @@ function RepsPicker({ reps, isLocked }) {
       REPS_OPTIONS.map((option) => el('option', { value: option, selected: option === reps }, option))));
 }
 
-// ─── Practice ────────────────────────────────────────────────────────────────
-
 function Practice({ state, actions }) {
-  const passage = state.passages.find((p) => p.id === state.activeId);
+  const passage = state.passages.find((passage) => passage.id === state.activeId);
   const { progress, reps } = passage;
   const justCompletedStep = [RESULT.LEVEL_UP, RESULT.MASTERED].includes(state.lastResult);
 
@@ -152,8 +146,6 @@ function StreakDots({ cleanRuns, reps }) {
   return el('span', { class: 'dots', title: `${cleanRuns} of ${reps} clean runs in a row` },
     Array.from({ length: reps }, (_, i) => el('span', { class: classes('dot', i < cleanRuns && 'filled') })));
 }
-
-// ─── Run text ────────────────────────────────────────────────────────────────
 
 /**
  * How a word is drawn. Each look is also its CSS class in style.css.
@@ -219,8 +211,6 @@ function LineBreaks({ count }) {
   return Array.from({ length: count }, () => el('br'));
 }
 
-// ─── Run summary ─────────────────────────────────────────────────────────────
-
 /** Mastering a passage ends practice: confetti, then "Done" returns to the library. */
 const SUMMARY = {
   [RESULT.FAILED]: {
@@ -267,8 +257,6 @@ function Confetti({ pieces }) {
       ].join('; '),
     })));
 }
-
-// ─── Labels ──────────────────────────────────────────────────────────────────
 
 function stepName(step) {
   return `${step.mode} · ${step.label}`;

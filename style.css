@@ -1,4 +1,4 @@
-/* ─── Theme ─────────────────────────────────────────────────────────────── */
+/* Theme */
 
 :root {
   color-scheme: light dark;
@@ -32,7 +32,7 @@
   }
 }
 
-/* ─── Base ──────────────────────────────────────────────────────────────── */
+/* Base */
 
 * { box-sizing: border-box; }
 
@@ -69,7 +69,7 @@ h3 { font-size: 1.1rem; }
   pointer-events: none;
 }
 
-/* ─── Controls ──────────────────────────────────────────────────────────── */
+/* Controls */
 
 button, .button {
   font: inherit;
@@ -104,7 +104,7 @@ kbd {
   opacity: 0.7;
 }
 
-/* ─── Layout pieces ─────────────────────────────────────────────────────── */
+/* Layout pieces */
 
 .top {
   display: flex;
@@ -122,7 +122,7 @@ kbd {
   margin-bottom: 16px;
 }
 
-/* ─── Library ───────────────────────────────────────────────────────────── */
+/* Library */
 
 .cards { list-style: none; padding: 0; margin: 0 0 28px; display: grid; gap: 8px; }
 
@@ -147,7 +147,7 @@ kbd {
   background: var(--surface);
 }
 
-/* ─── Practice ──────────────────────────────────────────────────────────── */
+/* Practice */
 
 .ladder { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .rung { font-size: 0.8rem; padding: 4px 10px; border-radius: 999px; color: var(--muted); }
@@ -201,7 +201,7 @@ kbd {
 .summary p { margin: 0; }
 .summary.failed { border-color: var(--bad); }
 
-/* ─── Words: one class per LOOK in components.js ────────────────────────── */
+/* Words: one class per LOOK in components.js */
 
 .word { border-radius: 3px; }
 .word.correct { color: var(--text); }
@@ -246,7 +246,7 @@ kbd {
   50% { opacity: 0; }
 }
 
-/* ─── Confetti: pieces fall from above the screen, drifting and spinning ── */
+/* Confetti: pieces fall from above the screen, drifting and spinning */
 
 .confetti {
   position: fixed;

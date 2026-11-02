@@ -18,8 +18,6 @@
  *   Hidden words are reshuffled every run, so you can't learn the pattern instead of the text.
  */
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-
 export const VIEW = { LIBRARY: 'library', PRACTICE: 'practice' };
 
 export const INPUT = { FIRST_LETTER: 'first-letter', WHOLE_WORD: 'whole-word' };
@@ -67,8 +65,6 @@ export const SAMPLE_PASSAGE = {
   ].join('\n'),
 };
 
-// ─── Passages & progress ─────────────────────────────────────────────────────
-
 export function createPassage(title, text, reps) {
   return { id: crypto.randomUUID(), title, text, reps, progress: progressAt(0) };
 }
@@ -96,8 +92,6 @@ export function currentStep(progress) {
   return STEPS[Math.min(progress.step, STEPS.length - 1)];
 }
 
-// ─── Words ───────────────────────────────────────────────────────────────────
-
 /** The letters to type: "Shepherd;" → "shepherd", "Café" → "cafe", "—" → "". */
 export function toKey(text) {
   return text
@@ -123,8 +117,6 @@ export function parseWords(text) {
   }
   return words;
 }
-
-// ─── Run ─────────────────────────────────────────────────────────────────────
 
 export function startRun(text, step) {
   const words = parseWords(text);
@@ -159,7 +151,6 @@ export function typeKey(run, char) {
   return { ...run, typed, wrongLetter: '' };
 }
 
-/** Turn a finished run into the passage's new progress. */
 export function scoreRun(progress, run, reps) {
   if (run.misses > 0) {
     return { result: RESULT.FAILED, progress: progressAt(progress.step) };
@@ -173,8 +164,6 @@ export function scoreRun(progress, run, reps) {
   const next = progressAt(Math.min(progress.step + 1, STEPS.length));
   return { result: isMastered(next) ? RESULT.MASTERED : RESULT.LEVEL_UP, progress: next };
 }
-
-// ─── Run helpers ─────────────────────────────────────────────────────────────
 
 function answerWord(run, isCorrect) {
   return skipUntypeableWords({
@@ -209,7 +198,7 @@ function pickHiddenIndexes(words, ratio) {
   return new Set(shuffle(typeable).slice(0, count));
 }
 
-/** Fisher–Yates shuffle. Returns a new array. */
+/** Fisher–Yates shuffle. */
 function shuffle(items) {
   const result = [...items];
   for (let i = result.length - 1; i > 0; i--) {

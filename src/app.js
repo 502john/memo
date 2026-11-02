@@ -30,8 +30,6 @@ import {
 const root = document.getElementById('app');
 const keyboard = document.getElementById('keyboard');
 
-// ─── State ───────────────────────────────────────────────────────────────────
-
 const saved = loadSaved();
 
 let state = {
@@ -60,10 +58,7 @@ function render() {
   }
 }
 
-// ─── Actions ─────────────────────────────────────────────────────────────────
-
 const actions = {
-  // Library
   openPassage(id) {
     const passage = findPassage(id);
     setState({ view: VIEW.PRACTICE, activeId: id, run: freshRun(passage), lastResult: null });
@@ -105,7 +100,6 @@ const actions = {
     }
   },
 
-  // Practice
   goToLibrary() {
     setState({ view: VIEW.LIBRARY, activeId: null, run: null, lastResult: null });
   },
@@ -131,7 +125,6 @@ const actions = {
   },
 
   reviewStep(stepIndex) {
-    if (!isMastered(activePassage().progress)) return;
     setState({ run: startRun(activePassage().text, STEPS[stepIndex]), lastResult: null });
   },
 
@@ -139,8 +132,6 @@ const actions = {
     keyboard.focus({ preventScroll: true });
   },
 };
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function findPassage(id) {
   return state.passages.find((passage) => passage.id === id);
@@ -154,8 +145,6 @@ function freshRun(passage) {
   const isReviewing = isMastered(passage.progress) && state.run;
   return startRun(passage.text, isReviewing ? state.run.step : currentStep(passage.progress));
 }
-
-// ─── Keyboard ────────────────────────────────────────────────────────────────
 
 keyboard.addEventListener('input', () => {
   for (const char of keyboard.value) actions.pressKey(char);
