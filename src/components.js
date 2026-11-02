@@ -121,7 +121,7 @@ function Practice({ state, actions }) {
       el('span', { class: 'row' },
         StreakDots({ cleanRuns: justCompletedStep ? reps : progress.cleanRuns, reps }),
         RepsPicker({ reps, onChange: actions.setReps }),
-        isSpeechSupported && MicButton({ isListening: state.listening, onToggle: actions.toggleListening }))),
+        MicButton({ isListening: state.listening, onToggle: actions.toggleListening }))),
     el('div', { class: 'text-box' }, RunText({ run: state.run })),
     state.run.status === RUN.FINISHED && RunSummary({
       result: state.lastResult,
@@ -143,7 +143,13 @@ function StepLadder({ progress, activeStep, onPick }) {
     }, stepName(step))));
 }
 
+/** Shown even where speech isn't supported (Firefox), so people know the option exists. */
 function MicButton({ isListening, onToggle }) {
+  if (!isSpeechSupported) {
+    return el('span', { class: 'row' },
+      el('button', { type: 'button', class: 'mic', disabled: true }, '🎤 Speak'),
+      el('span', { class: 'note' }, 'Needs Chrome, Edge or Safari'));
+  }
   return el('button', {
     type: 'button',
     class: classes('mic', isListening && 'listening'),
