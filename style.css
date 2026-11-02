@@ -250,7 +250,7 @@ kbd {
 .word.blank {
   display: inline-block;
   width: calc(var(--letters) * 0.5em);
-  border-bottom: 3px dotted var(--pencil);
+  border-bottom: 2px solid var(--pencil);
 }
 
 .word.typing::after {
