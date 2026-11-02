@@ -127,7 +127,7 @@ function Practice({ state, actions }) {
       run: state.run,
       progress,
       reps,
-      onContinue: actions.nextRun,
+      onContinue: actions.continueAfterRun,
     }),
     el('p', { class: 'note' }, 'Esc goes back to your passages.'));
 }
@@ -221,21 +221,51 @@ function LineBreaks({ count }) {
 
 // ─── Run summary ─────────────────────────────────────────────────────────────
 
-const SUMMARY_MESSAGE = {
-  [RESULT.FAILED]: ({ run }) =>
-    `${plural(run.misses, 'word')} missed. This run doesn't count and your streak resets. Go again.`,
-  [RESULT.CLEAN]: ({ progress, reps }) =>
-    `Clean run! ${progress.cleanRuns} of ${reps}.`,
-  [RESULT.LEVEL_UP]: ({ progress }) =>
-    `Step complete! Next: ${stepName(currentStep(progress))}.`,
-  [RESULT.MASTERED]: () =>
-    'Memorized! You typed the whole thing from memory. 🎉',
+/** Mastering a passage ends practice: confetti, then "Done" returns to the library. */
+const SUMMARY = {
+  [RESULT.FAILED]: {
+    message: ({ run }) => `${plural(run.misses, 'word')} missed. This run doesn't count and your streak resets.`,
+    button: 'Try again',
+  },
+  [RESULT.CLEAN]: {
+    message: ({ progress, reps }) => `Clean run! ${progress.cleanRuns} of ${reps}.`,
+    button: 'Next run',
+  },
+  [RESULT.LEVEL_UP]: {
+    message: ({ progress }) => `Step complete! Next: ${stepName(currentStep(progress))}.`,
+    button: 'Next step',
+  },
+  [RESULT.MASTERED]: {
+    message: () => 'Memorized! You typed the whole thing from memory. 🎉',
+    button: 'Done',
+  },
 };
 
 function RunSummary({ result, run, progress, reps, onContinue }) {
+  const { message, button } = SUMMARY[result];
+
   return el('div', { class: classes('summary', result), role: 'status' },
-    el('p', {}, SUMMARY_MESSAGE[result]({ run, progress, reps })),
-    el('button', { type: 'button', class: 'primary', onclick: onContinue }, 'Continue ', el('kbd', {}, 'Enter')));
+    result === RESULT.MASTERED && Confetti({ pieces: 120 }),
+    el('p', {}, message({ run, progress, reps })),
+    el('button', { type: 'button', class: 'primary', onclick: onContinue }, `${button} `, el('kbd', {}, 'Enter')));
+}
+
+const CONFETTI_COLORS = ['#2f6fde', '#2e8b57', '#d23c3c', '#f5b301', '#8e44ad'];
+
+/** Each piece gets a random column, drift, spin and delay; style.css makes it fall. */
+function Confetti({ pieces }) {
+  const random = (min, max) => min + Math.random() * (max - min);
+
+  return el('div', { class: 'confetti', 'aria-hidden': 'true' },
+    Array.from({ length: pieces }, (_, i) => el('span', {
+      style: [
+        `--x: ${random(0, 100)}vw`,
+        `--drift: ${random(-15, 15)}vw`,
+        `--spin: ${random(-3, 3)}turn`,
+        `--delay: ${random(0, 0.8)}s`,
+        `--color: ${CONFETTI_COLORS[i % CONFETTI_COLORS.length]}`,
+      ].join('; '),
+    })));
 }
 
 // ─── Labels ──────────────────────────────────────────────────────────────────

@@ -246,6 +246,31 @@ kbd {
   50% { opacity: 0; }
 }
 
+/* ─── Confetti: pieces fall from above the screen, drifting and spinning ── */
+
+.confetti {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti span {
+  position: absolute;
+  top: -20px;
+  left: var(--x);
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--color);
+  animation: confetti-fall 2.8s cubic-bezier(0.3, 0.6, 0.6, 1) var(--delay) forwards;
+}
+
+@keyframes confetti-fall {
+  to { transform: translate(var(--drift), 110vh) rotate(var(--spin)); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .word.reveal, .word.typing::after { animation: none; }
+  .confetti { display: none; }
 }

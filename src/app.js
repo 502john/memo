@@ -23,7 +23,7 @@
 import { App } from './components.js';
 import { loadSaved, save, downloadBackup, readBackup } from './storage.js';
 import {
-  VIEW, RUN, STEPS, DEFAULT_REPS, SAMPLE_PASSAGE,
+  VIEW, RUN, RESULT, STEPS, DEFAULT_REPS, SAMPLE_PASSAGE,
   createPassage, replacePassage, mergePassages, progressAt, currentStep, isMastered, startRun, typeKey, scoreRun,
 } from './state.js';
 
@@ -122,7 +122,11 @@ const actions = {
     setState({ run, lastResult: result, passages: replacePassage(state.passages, { ...passage, progress }) });
   },
 
-  nextRun() {
+  continueAfterRun() {
+    if (state.lastResult === RESULT.MASTERED) {
+      actions.goToLibrary();
+      return;
+    }
     setState({ run: freshRun(activePassage()), lastResult: null });
   },
 
@@ -159,7 +163,7 @@ keyboard.addEventListener('input', () => {
 });
 
 keyboard.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter' && state.run?.status === RUN.FINISHED) actions.nextRun();
+  if (event.key === 'Enter' && state.run?.status === RUN.FINISHED) actions.continueAfterRun();
   if (event.key === 'Escape') actions.goToLibrary();
 });
 
