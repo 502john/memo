@@ -1,34 +1,39 @@
-/* Theme */
+/*
+ * Copybook: a handwriting-practice worksheet. You trace faint words, then fill
+ * gaps, then write on blank ruled lines, which is exactly the ladder. The guide
+ * lines under the passage are the one bold element; everything else stays quiet.
+ * Light is paper and ink; dark is a chalkboard.
+ *
+ *   paper     page background
+ *   ink       text, primary buttons, the word you're on
+ *   graphite  secondary text
+ *   pencil    faint words you can still trace
+ *   guide     ruled lines and empty marks
+ *   red-pen   corrections and the teacher's ticks
+ *   wash      hover tint
+ */
 
 :root {
   color-scheme: light dark;
-  --bg: #fbfaf7;
-  --surface: #ffffff;
-  --border: #e6e3dd;
-  --text: #1d1d1f;
-  --muted: #7c7c80;
-  --faint: #c4c1bb;
-  --accent: #2f6fde;
-  --good: #2e8b57;
-  --bad: #d23c3c;
-  --bad-bg: #fde8e8;
-  --radius: 10px;
-  --font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-text: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --paper: #fbfcfe;
+  --ink: #1d2b53;
+  --graphite: #5b6475;
+  --pencil: #8a93a3;
+  --guide: #9db8d9;
+  --red-pen: #c8102e;
+  --wash: #eef2f8;
+  --font: "Andika", "Atkinson Hyperlegible", system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #141416;
-    --surface: #1d1d20;
-    --border: #2e2e33;
-    --text: #ececee;
-    --muted: #8e8e93;
-    --faint: #4c4c52;
-    --accent: #6c9cff;
-    --good: #5cc98a;
-    --bad: #ff6b6b;
-    --bad-bg: #3a1f1f;
+    --paper: #24332c;
+    --ink: #eef0e6;
+    --graphite: #b5beb6;
+    --pencil: #8d9a91;
+    --guide: #4c6056;
+    --red-pen: #ff8a80;
+    --wash: #2d3e36;
   }
 }
 
@@ -38,24 +43,26 @@
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font: 16px/1.5 var(--font-ui);
+  background: var(--paper);
+  color: var(--ink);
+  font: 17px/1.55 var(--font);
 }
 
 .app {
   max-width: 760px;
   margin: 0 auto;
-  padding: 24px 16px 64px;
+  padding: 32px 16px 72px;
 }
 
 h1, h2, h3 { margin: 0; line-height: 1.2; }
-h2 { font-size: 1.4rem; }
-h3 { font-size: 1.1rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.15rem; }
 
-.muted { color: var(--muted); }
-.note { color: var(--muted); font-size: 0.85rem; }
-.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.muted { color: var(--graphite); }
+.note { color: var(--graphite); font-size: 0.85rem; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
 /* The hidden typing field. 16px font stops iOS zooming in when it's focused. */
 .visually-hidden {
@@ -69,39 +76,53 @@ h3 { font-size: 1.1rem; }
   pointer-events: none;
 }
 
-/* Controls */
+/* Controls: ink-outlined buttons, worksheet-blank inputs */
 
 button, .button {
   font: inherit;
-  font-size: 0.9rem;
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
+  font-size: 0.95rem;
+  padding: 6px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
   cursor: pointer;
 }
-button:hover, .button:hover { border-color: var(--muted); }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-button.danger:hover { border-color: var(--bad); color: var(--bad); }
+button:hover, .button:hover { background: var(--wash); }
+button.primary { background: var(--ink); color: var(--paper); }
 
-input, textarea {
+button.quiet { border-color: transparent; color: var(--graphite); padding: 6px 8px; }
+button.quiet:hover { background: none; color: var(--ink); text-decoration: underline; }
+button.quiet.danger:hover { color: var(--red-pen); }
+
+input, select {
+  font: inherit;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--ink);
+  border-radius: 0;
+  padding: 6px 2px;
+}
+input { width: 100%; }
+
+textarea {
   font: inherit;
   width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
+  padding: 10px 12px;
+  color: var(--ink);
+  background: transparent;
+  border: 1.5px solid var(--guide);
+  border-radius: 4px;
+  resize: vertical;
 }
-textarea { resize: vertical; font-family: var(--font-text); }
 
 kbd {
-  font: 0.75rem var(--font-ui);
-  padding: 1px 5px;
+  font: 0.75rem var(--font);
+  padding: 0 5px;
   border: 1px solid currentColor;
-  border-radius: 4px;
-  opacity: 0.7;
+  border-radius: 3px;
+  opacity: 0.75;
 }
 
 /* Layout pieces */
@@ -109,10 +130,10 @@ kbd {
 .top {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  margin-bottom: 28px;
+  gap: 14px;
+  margin-bottom: 36px;
 }
-.brand { font-size: 1.5rem; }
+.brand { font-size: 2rem; }
 
 .section-head {
   display: flex;
@@ -122,38 +143,46 @@ kbd {
   margin-bottom: 16px;
 }
 
-/* Library */
+/* Library: a plain list ruled like the page */
 
-.cards { list-style: none; padding: 0; margin: 0 0 28px; display: grid; gap: 8px; }
+.passages { list-style: none; padding: 0; margin: 0 0 40px; border-top: 1px solid var(--guide); }
 
-.card { display: flex; gap: 8px; align-items: stretch; }
+.passage-row { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--guide); }
 
-.card-main {
+.passage-open {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 12px 14px;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 0;
+  border: none;
+  background: none;
+  font-size: 1.1rem;
   text-align: left;
 }
+.passage-open:hover { background: none; }
+.passage-open:hover strong { text-decoration: underline; }
 
-.editor {
-  display: grid;
-  gap: 10px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
+.editor { display: grid; gap: 14px; }
 
 /* Practice */
 
-.ladder { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-.rung { font-size: 0.8rem; padding: 4px 10px; border-radius: 999px; color: var(--muted); }
-.rung:disabled { pointer-events: none; border-color: var(--border); }
-.rung.done { color: var(--good); border-color: var(--good); }
-.rung.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ladder { display: flex; flex-wrap: wrap; gap: 4px 22px; margin-bottom: 18px; }
+
+.rung {
+  padding: 4px 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--graphite);
+}
+.rung:hover { background: none; color: var(--ink); }
+.rung:disabled { pointer-events: none; }
+.rung.active { color: var(--ink); border-bottom-color: var(--ink); font-weight: 700; }
+
+.tick { margin-left: 5px; color: var(--red-pen); font-weight: 700; }
 
 .meta {
   display: flex;
@@ -161,30 +190,37 @@ kbd {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  font-size: 0.9rem;
-  margin-bottom: 12px;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
 }
 
-.dots { display: inline-flex; gap: 4px; }
-.dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--good); }
-.dot.filled { background: var(--good); }
+.tally { display: inline-flex; gap: 5px; align-items: center; }
+.stroke { width: 3px; height: 17px; border-radius: 2px; background: var(--guide); transform: rotate(10deg); }
+.stroke.marked { background: var(--ink); }
 
-.reps { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.9rem; }
-.reps select { font: inherit; padding: 2px 6px; border-radius: 6px; }
+.reps { display: inline-flex; align-items: center; gap: 6px; color: var(--graphite); font-size: 0.95rem; }
 
-.text-box {
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  cursor: text;
-}
+.text-box { padding: 8px 0; cursor: text; }
 
+/*
+ * Handwriting guide lines, drawn by masking the guide colour with one tile per
+ * row: a top line, a dashed midline at x-height, and a heavier baseline. The
+ * tile is sized in em, so the lines stay aligned with the text at any font size.
+ */
 .passage {
+  position: relative;
+  isolation: isolate;
   margin: 0;
-  font-family: var(--font-text);
-  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  font-size: clamp(1.3rem, 3.6vw, 1.75rem);
   line-height: 2;
+}
+.passage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--guide);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 40' preserveAspectRatio='none'%3E%3Crect y='11.4' width='10' height='.7' fill-opacity='.4'/%3E%3Crect y='19.2' width='5' height='.7' fill-opacity='.4'/%3E%3Crect y='27.6' width='10' height='1.1'/%3E%3C/svg%3E") 0 0 / 0.5em 2em repeat;
 }
 
 .summary {
@@ -193,51 +229,49 @@ kbd {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 12px;
-  padding: 12px 16px;
-  border-radius: var(--radius);
-  border: 1px solid var(--good);
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1.5px solid var(--ink);
 }
 .summary p { margin: 0; }
-.summary.failed { border-color: var(--bad); }
+.summary.failed p { color: var(--red-pen); }
 
 /* Words: one class per LOOK in components.js */
 
-.word { border-radius: 3px; }
-.word.correct { color: var(--text); }
-.word.missed { color: var(--bad); background: var(--bad-bg); }
-.word.upcoming { color: var(--faint); }
+.word.correct { color: var(--ink); }
+.word.upcoming { color: var(--pencil); }
+
+.word.missed, .wrong-letter {
+  color: var(--red-pen);
+  text-decoration: underline wavy var(--red-pen) 1.5px;
+  text-underline-offset: 6px;
+}
 
 .word.blank {
   display: inline-block;
-  width: calc(var(--letters) * 0.55em);
-  height: 1em;
-  border-bottom: 2px solid var(--faint);
-  vertical-align: -0.15em;
+  width: calc(var(--letters) * 0.5em);
+  border-bottom: 3px dotted var(--pencil);
 }
 
-.word.typing { color: var(--accent); }
 .word.typing::after {
   content: "";
   display: inline-block;
   width: 2px;
   height: 1em;
   margin-left: 1px;
-  background: var(--accent);
+  background: var(--ink);
   vertical-align: -0.15em;
   animation: blink 1s steps(1) infinite;
 }
 
-.wrong-letter { color: var(--bad); background: var(--bad-bg); border-radius: 2px; }
+/* The word you're on: ink, underlined in ink. */
+.word.current { color: var(--ink); text-decoration: underline 2px var(--ink); text-underline-offset: 6px; }
+.word.blank.current { border-bottom: 3px solid var(--ink); }
 
-/* The word you're on: underlined in the accent colour. */
-.word.current { color: var(--text); box-shadow: 0 2px 0 var(--accent); }
-.word.blank.current { border-bottom-color: var(--accent); box-shadow: none; }
+/* A word you just answered writes itself out, letter by letter. */
+.word.reveal { animation: write-out calc(var(--letters) * 30ms) steps(var(--letters)) both; }
 
-/* A word you just answered types itself out, letter by letter. */
-.word.reveal { animation: type-out calc(var(--letters) * 30ms) steps(var(--letters)) both; }
-
-@keyframes type-out {
+@keyframes write-out {
   from { clip-path: inset(0 100% 0 0); }
   to { clip-path: inset(0 0 0 0); }
 }
@@ -246,7 +280,7 @@ kbd {
   50% { opacity: 0; }
 }
 
-/* Confetti: pieces fall from above the screen, drifting and spinning */
+/* Confetti: strips in the page's own inks fall from above the screen */
 
 .confetti {
   position: fixed;
@@ -259,9 +293,9 @@ kbd {
   position: absolute;
   top: -20px;
   left: var(--x);
-  width: 8px;
+  width: 7px;
   height: 14px;
-  border-radius: 2px;
+  border-radius: 1px;
   background: var(--color);
   animation: confetti-fall 2.8s cubic-bezier(0.3, 0.6, 0.6, 1) var(--delay) forwards;
 }

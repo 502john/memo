@@ -10,7 +10,7 @@
  *   │   └── PassageEditor → RepsPicker
  *   └── Practice
  *       ├── StepLadder
- *       ├── StreakDots
+ *       ├── Tally
  *       ├── RunText → Word (one per word)
  *       └── RunSummary
  */
@@ -41,7 +41,7 @@ function Library({ state, actions }) {
     el('div', { class: 'section-head' },
       el('h2', {}, 'Your passages'),
       BackupButtons({ onExport: actions.exportBackup, onImport: actions.importBackup })),
-    el('ul', { class: 'cards' },
+    el('ul', { class: 'passages' },
       state.passages.map((passage) => PassageCard({
         passage,
         onOpen: () => actions.openPassage(passage.id),
@@ -66,12 +66,12 @@ function BackupButtons({ onExport, onImport }) {
 }
 
 function PassageCard({ passage, onOpen, onEdit, onDelete }) {
-  return el('li', { class: 'card' },
-    el('button', { type: 'button', class: 'card-main', onclick: onOpen },
+  return el('li', { class: 'passage-row' },
+    el('button', { type: 'button', class: 'passage-open', onclick: onOpen },
       el('strong', {}, passage.title),
       el('span', { class: 'muted' }, progressLabel(passage.progress))),
-    el('button', { type: 'button', onclick: onEdit }, 'Edit'),
-    el('button', { type: 'button', class: 'danger', onclick: onDelete }, 'Delete'));
+    el('button', { type: 'button', class: 'quiet', onclick: onEdit }, 'Edit'),
+    el('button', { type: 'button', class: 'quiet danger', onclick: onDelete }, 'Delete'));
 }
 
 /** Add a passage when `passage` is undefined, otherwise edit it. Reps are locked once added. */
@@ -110,11 +110,11 @@ function Practice({ state, actions }) {
   return el('section', { class: 'practice', onclick: actions.focusKeyboard },
     el('div', { class: 'section-head' },
       el('h2', {}, passage.title),
-      el('button', { type: 'button', onclick: actions.goToLibrary }, '← All passages')),
+      el('button', { type: 'button', onclick: actions.goToLibrary }, 'All passages')),
     StepLadder({ progress, activeStep: state.run.step, onPick: actions.reviewStep }),
     el('div', { class: 'meta' },
       el('span', { class: 'muted' }, state.run.step.hint),
-      StreakDots({ cleanRuns: justCompletedStep ? reps : progress.cleanRuns, reps })),
+      Tally({ cleanRuns: justCompletedStep ? reps : progress.cleanRuns, reps })),
     el('div', { class: 'text-box' }, RunText({ run: state.run })),
     state.run.status === RUN.FINISHED && RunSummary({
       result: state.lastResult,
@@ -136,15 +136,15 @@ function StepLadder({ progress, activeStep, onPick }) {
   },
   STEPS.map((step, i) => el('button', {
     type: 'button',
-    class: classes('rung', step === activeStep && 'active', i < progress.step && 'done'),
+    class: classes('rung', step === activeStep && 'active'),
     disabled: isLocked,
     onclick: () => onPick(i),
-  }, stepName(step))));
+  }, step.label, i < progress.step && el('span', { class: 'tick', 'aria-label': 'completed' }, '✓'))));
 }
 
-function StreakDots({ cleanRuns, reps }) {
-  return el('span', { class: 'dots', title: `${cleanRuns} of ${reps} clean runs in a row` },
-    Array.from({ length: reps }, (_, i) => el('span', { class: classes('dot', i < cleanRuns && 'filled') })));
+function Tally({ cleanRuns, reps }) {
+  return el('span', { class: 'tally', title: `${cleanRuns} of ${reps} clean runs in a row` },
+    Array.from({ length: reps }, (_, i) => el('span', { class: classes('stroke', i < cleanRuns && 'marked') })));
 }
 
 /**
@@ -222,11 +222,11 @@ const SUMMARY = {
     button: 'Next run',
   },
   [RESULT.LEVEL_UP]: {
-    message: ({ progress }) => `Step complete! Next: ${stepName(currentStep(progress))}.`,
+    message: ({ progress }) => `Step complete! Next: ${currentStep(progress).label}.`,
     button: 'Next step',
   },
   [RESULT.MASTERED]: {
-    message: () => 'Memorized! You typed the whole thing from memory. 🎉',
+    message: () => 'Memorized! You typed the whole thing from memory.',
     button: 'Done',
   },
 };
@@ -240,7 +240,7 @@ function RunSummary({ result, run, progress, reps, onContinue }) {
     el('button', { type: 'button', class: 'primary', onclick: onContinue }, `${button} `, el('kbd', {}, 'Enter')));
 }
 
-const CONFETTI_COLORS = ['#2f6fde', '#2e8b57', '#d23c3c', '#f5b301', '#8e44ad'];
+const CONFETTI_COLORS = ['var(--ink)', 'var(--red-pen)', 'var(--guide)', 'var(--pencil)'];
 
 /** Each piece gets a random column, drift, spin and delay; style.css makes it fall. */
 function Confetti({ pieces }) {
@@ -258,13 +258,9 @@ function Confetti({ pieces }) {
     })));
 }
 
-function stepName(step) {
-  return `${step.mode} · ${step.label}`;
-}
-
 function progressLabel(progress) {
   if (isMastered(progress)) return 'Memorized ✓';
-  return `Step ${progress.step + 1} of ${STEPS.length}: ${stepName(currentStep(progress))}`;
+  return `${currentStep(progress).label}, step ${progress.step + 1} of ${STEPS.length}`;
 }
 
 function plural(count, noun) {
