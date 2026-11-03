@@ -51,7 +51,7 @@ function Library({ state, actions }) {
       }))),
     PassageEditor({ passage: editing, onSave: actions.savePassage, onCancel: actions.cancelEdit }),
     el('p', { class: 'note' },
-      'Everything is stored in this browser only. Use Export to back up or move to another device.'));
+      'Memo has no server and collects nothing: your passages stay in this browser. Use Export to back up or move to another device.'));
 }
 
 function BackupButtons({ onExport, onImport }) {
@@ -118,7 +118,7 @@ function Practice({ state, actions }) {
     StepLadder({ progress, activeStep: state.run.step, onPick: actions.goToStep }),
     el('div', { class: 'meta' },
       StreakCount({ cleanRuns: justCompletedStep ? reps : progress.cleanRuns, reps }),
-      el('span', { class: 'muted' }, state.listening ? 'Listening… say each word out loud.' : state.run.step.hint),
+      el('span', { class: 'muted' }, state.listening ? 'Listening… say each word. Chrome sends the audio to Google to transcribe it.' : state.run.step.hint),
       el('span', { class: 'row controls' },
         RepsPicker({ reps, onChange: actions.setReps }),
         MicButton({ isListening: state.listening, onToggle: actions.toggleListening }))),

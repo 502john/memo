@@ -40,6 +40,16 @@ GitHub → **Settings → Pages → Deploy from a branch → `main` / root**. Ev
 | `src/storage.js` | localStorage, plus export and import of backups. |
 | `src/dom.js` | `el()`, the helper every component is built with. |
 
+## Privacy
+
+Memo has no server and collects nothing. Passages and progress are stored in your browser's localStorage, and the font is served from this site, so a visit makes no third-party requests. The one exception is **speak**: your browser's speech recognition handles the audio, and in Chrome that means it's sent to Google to be transcribed.
+
+## Credits
+
+- The look follows [Monkeytype](https://github.com/monkeytypegame/monkeytype)'s "serika" themes. Only colours and layout ideas are borrowed, no code.
+- [Roboto Mono](https://github.com/googlefonts/robotomono) is used under the SIL Open Font License (`fonts/OFL.txt`).
+- The sample passage is Psalm 23 from the King James Version, which is public domain in the US.
+
 ## License
 
 MIT

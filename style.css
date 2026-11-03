@@ -11,6 +11,15 @@
  *   error     missed words and wrong input
  */
 
+/* Self-hosted so visitors never contact Google (see fonts/OFL.txt for the font's licence). */
+@font-face {
+  font-family: "Roboto Mono";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("fonts/roboto-mono-latin.woff2") format("woff2");
+}
+
 :root {
   color-scheme: dark light;
   --bg: #323437;

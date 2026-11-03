@@ -24,7 +24,7 @@ import { loadSaved, save, downloadBackup, readBackup } from './storage.js';
 import { startListening, stopListening } from './speech.js';
 import {
   VIEW, RUN, RESULT, DEFAULT_REPS, SAMPLE_PASSAGE,
-  createPassage, upgradePassage, replacePassage, mergePassages, newProgress, moveToStep, currentStep,
+  createPassage, restorePassages, replacePassage, mergePassages, newProgress, moveToStep, currentStep,
   startRun, typeKey, sayWord, scoreRun,
 } from './state.js';
 
@@ -35,7 +35,7 @@ const saved = loadSaved();
 
 let state = {
   view: VIEW.LIBRARY,
-  passages: saved?.passages.map(upgradePassage) ?? [createPassage(SAMPLE_PASSAGE.title, SAMPLE_PASSAGE.text, DEFAULT_REPS)],
+  passages: saved ? restorePassages(saved.passages) : [createPassage(SAMPLE_PASSAGE.title, SAMPLE_PASSAGE.text, DEFAULT_REPS)],
   activeId: null,
   editingId: null,
   run: null,
@@ -97,7 +97,7 @@ const actions = {
   async importBackup(file) {
     try {
       const backup = await readBackup(file);
-      setState({ passages: mergePassages(state.passages, backup.passages.map(upgradePassage)) });
+      setState({ passages: mergePassages(state.passages, restorePassages(backup.passages)) });
     } catch (error) {
       alert(`Import failed: ${error.message}`);
     }

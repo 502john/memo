@@ -1,13 +1,17 @@
 /**
  * storage.js: everything lives in the user's browser (localStorage).
  * There is no server. Export and import move data between browsers.
+ * Only the outer shape is checked here; state.js restorePassages checks each passage.
+ * Backups over 5 MB are refused, which is more than localStorage can hold anyway.
  */
 
 const STORAGE_KEY = 'memo:v2';
+const MAX_BACKUP_BYTES = 5_000_000;
 
 export function loadSaved() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY));
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return Array.isArray(saved?.passages) ? saved : null;
   } catch {
     return null;
   }
@@ -29,6 +33,7 @@ export function downloadBackup({ passages }) {
 }
 
 export async function readBackup(file) {
+  if (file.size > MAX_BACKUP_BYTES) throw new Error('This file is too big to be a Memo backup.');
   const data = JSON.parse(await file.text());
   if (!Array.isArray(data?.passages)) throw new Error('This file is not a Memo backup.');
   return data;
