@@ -72,12 +72,41 @@ export function createPassage(title, text, reps) {
   return { id: crypto.randomUUID(), title, text, reps, progress: newProgress() };
 }
 
-/** Saves from before skipping existed: every step below `step` was earned, and step past the end meant mastered. */
-export function upgradePassage(passage) {
-  const { progress } = passage;
-  if (progress.completed) return passage;
-  const completed = Array.from({ length: progress.step }, (_, i) => i);
-  return { ...passage, progress: { ...progress, step: Math.min(progress.step, LAST_STEP), completed } };
+/**
+ * Saved data and backup files can be corrupted or hand-edited, so every passage
+ * loaded from them is rebuilt from known fields, and unusable ones are dropped.
+ * Saves from before skipping existed have no `completed`: back then every step
+ * below `step` was earned, and a step past the end meant mastered.
+ */
+export function restorePassages(saved) {
+  return saved.map(restorePassage).filter(Boolean);
+}
+
+function restorePassage(saved) {
+  const { id, title, text, reps } = saved ?? {};
+  if (![id, title, text].every((field) => typeof field === 'string')) return null;
+
+  const progress = saved.progress ?? {};
+  const step = wholeNumberIn(progress.step, 0, STEPS.length);
+  const completed = Array.isArray(progress.completed)
+    ? progress.completed.filter((index) => Number.isInteger(index) && index >= 0 && index <= LAST_STEP)
+    : Array.from({ length: step }, (_, i) => i);
+
+  return {
+    id,
+    title,
+    text,
+    reps: REPS_OPTIONS.includes(reps) ? reps : DEFAULT_REPS,
+    progress: {
+      step: Math.min(step, LAST_STEP),
+      cleanRuns: wholeNumberIn(progress.cleanRuns, 0, REPS_OPTIONS.at(-1)),
+      completed: [...new Set(completed)],
+    },
+  };
+}
+
+function wholeNumberIn(value, min, max) {
+  return Number.isInteger(value) ? Math.min(Math.max(value, min), max) : min;
 }
 
 export function replacePassage(passages, passage) {
