@@ -10,7 +10,7 @@
  *   │   └── PassageEditor → RepsPicker
  *   └── Practice
  *       ├── StepLadder
- *       ├── Tally
+ *       ├── StreakCount
  *       ├── RunText → Word (one per word)
  *       └── RunSummary
  */
@@ -29,7 +29,7 @@ const VIEWS = {
 export function App({ state, actions }) {
   return el('div', { class: 'app' },
     el('header', { class: 'top' },
-      el('h1', { class: 'brand' }, 'Memo'),
+      el('h1', { class: 'brand' }, 'memo'),
       el('span', { class: 'muted' }, 'memorize anything by typing it')),
     VIEWS[state.view]({ state, actions }));
 }
@@ -113,8 +113,8 @@ function Practice({ state, actions }) {
       el('button', { type: 'button', onclick: actions.goToLibrary }, 'All passages')),
     StepLadder({ progress, activeStep: state.run.step, onPick: actions.reviewStep }),
     el('div', { class: 'meta' },
-      el('span', { class: 'muted' }, state.run.step.hint),
-      Tally({ cleanRuns: justCompletedStep ? reps : progress.cleanRuns, reps })),
+      StreakCount({ cleanRuns: justCompletedStep ? reps : progress.cleanRuns, reps }),
+      el('span', { class: 'muted' }, state.run.step.hint)),
     el('div', { class: 'text-box' }, RunText({ run: state.run })),
     state.run.status === RUN.FINISHED && RunSummary({
       result: state.lastResult,
@@ -123,7 +123,7 @@ function Practice({ state, actions }) {
       reps,
       onContinue: actions.continueAfterRun,
     }),
-    el('p', { class: 'note' }, 'Esc goes back to your passages.'));
+    el('p', { class: 'note' }, el('kbd', {}, 'esc'), ' back to your passages'));
 }
 
 function StepLadder({ progress, activeStep, onPick }) {
@@ -142,9 +142,8 @@ function StepLadder({ progress, activeStep, onPick }) {
   }, step.label, i < progress.step && el('span', { class: 'tick', 'aria-label': 'completed' }, '✓'))));
 }
 
-function Tally({ cleanRuns, reps }) {
-  return el('span', { class: 'tally', title: `${cleanRuns} of ${reps} clean runs in a row` },
-    Array.from({ length: reps }, (_, i) => el('span', { class: classes('stroke', i < cleanRuns && 'marked') })));
+function StreakCount({ cleanRuns, reps }) {
+  return el('span', { class: 'streak', title: `${cleanRuns} of ${reps} clean runs in a row` }, `${cleanRuns}/${reps}`);
 }
 
 /**
@@ -240,7 +239,7 @@ function RunSummary({ result, run, progress, reps, onContinue }) {
     el('button', { type: 'button', class: 'primary', onclick: onContinue }, `${button} `, el('kbd', {}, 'Enter')));
 }
 
-const CONFETTI_COLORS = ['var(--ink)', 'var(--red-pen)', 'var(--guide)', 'var(--pencil)'];
+const CONFETTI_COLORS = ['var(--main)', 'var(--text)', 'var(--sub)', 'var(--error)'];
 
 /** Each piece gets a random column, drift, spin and delay; style.css makes it fall. */
 function Confetti({ pieces }) {

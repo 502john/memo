@@ -1,39 +1,34 @@
 /*
- * Copybook: a handwriting-practice worksheet. You trace faint words, then fill
- * gaps, then write on blank ruled lines, which is exactly the ladder. The guide
- * lines under the passage are the one bold element; everything else stays quiet.
- * Light is paper and ink; dark is a chalkboard.
+ * Monkeytype look: one calm centered column, a monospace face, words that go
+ * from grey to bright as you answer them, and a yellow caret. Colours are
+ * Monkeytype's default "serika dark" theme, and its "serika" theme in light mode.
  *
- *   paper     page background
- *   ink       text, primary buttons, the word you're on
- *   graphite  secondary text
- *   pencil    faint words you can still trace
- *   guide     ruled lines and empty marks
- *   red-pen   corrections and the teacher's ticks
- *   wash      hover tint
+ *   bg        page background
+ *   sub-alt   filled controls: the step bar, buttons, inputs, key caps
+ *   sub       untyped words and secondary text
+ *   text      answered words and primary text
+ *   main      the caret, the active step and the streak counter
+ *   error     missed words and wrong input
  */
 
 :root {
-  color-scheme: light dark;
-  --paper: #fbfcfe;
-  --ink: #1d2b53;
-  --graphite: #5b6475;
-  --pencil: #8a93a3;
-  --guide: #9db8d9;
-  --red-pen: #c8102e;
-  --wash: #eef2f8;
-  --font: "Andika", "Atkinson Hyperlegible", system-ui, sans-serif;
+  color-scheme: dark light;
+  --bg: #323437;
+  --sub-alt: #2c2e31;
+  --sub: #646669;
+  --text: #d1d0c5;
+  --main: #e2b714;
+  --error: #ca4754;
+  --font: "Roboto Mono", ui-monospace, Menlo, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --paper: #24332c;
-    --ink: #eef0e6;
-    --graphite: #b5beb6;
-    --pencil: #8d9a91;
-    --guide: #4c6056;
-    --red-pen: #ff8a80;
-    --wash: #2d3e36;
+    --bg: #e1e1e3;
+    --sub-alt: #d1d3d8;
+    --sub: #aaaeb3;
+    --text: #323437;
+    --error: #da3333;
   }
 }
 
@@ -43,26 +38,28 @@
 
 body {
   margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font: 17px/1.55 var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 var(--font);
+  caret-color: var(--main);
 }
 
 .app {
-  max-width: 760px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 32px 16px 72px;
+  padding: 32px 24px 72px;
 }
 
-h1, h2, h3 { margin: 0; line-height: 1.2; }
-h2 { font-size: 1.5rem; }
-h3 { font-size: 1.15rem; }
+h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 500; }
+h2 { font-size: 1.4rem; }
+h3 { font-size: 1.05rem; color: var(--sub); }
 
-.muted { color: var(--graphite); }
-.note { color: var(--graphite); font-size: 0.85rem; }
+.muted { color: var(--sub); }
+.note { color: var(--sub); font-size: 0.8rem; }
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
-:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+::selection { background: var(--main); color: var(--bg); }
+:focus-visible { outline: 2px solid var(--main); outline-offset: 2px; }
 
 /* The hidden typing field. 16px font stops iOS zooming in when it's focused. */
 .visually-hidden {
@@ -76,53 +73,45 @@ h3 { font-size: 1.15rem; }
   pointer-events: none;
 }
 
-/* Controls: ink-outlined buttons, worksheet-blank inputs */
+/* Controls: flat filled shapes that invert on hover */
 
 button, .button {
   font: inherit;
-  font-size: 0.95rem;
-  padding: 6px 14px;
-  border: 1.5px solid var(--ink);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-}
-button:hover, .button:hover { background: var(--wash); }
-button.primary { background: var(--ink); color: var(--paper); }
-
-button.quiet { border-color: transparent; color: var(--graphite); padding: 6px 8px; }
-button.quiet:hover { background: none; color: var(--ink); text-decoration: underline; }
-button.quiet.danger:hover { color: var(--red-pen); }
-
-input, select {
-  font: inherit;
-  color: var(--ink);
-  background: transparent;
+  font-size: 0.9rem;
+  padding: 8px 16px;
   border: none;
-  border-bottom: 1.5px solid var(--ink);
-  border-radius: 0;
-  padding: 6px 2px;
+  border-radius: 8px;
+  background: var(--sub-alt);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
 }
-input { width: 100%; }
+button:hover, .button:hover { background: var(--text); color: var(--bg); }
+button.primary { color: var(--main); }
+button.primary:hover { background: var(--main); color: var(--bg); }
 
-textarea {
+button.quiet { background: none; color: var(--sub); padding: 6px 10px; }
+button.quiet:hover { background: none; color: var(--text); }
+button.quiet.danger:hover { color: var(--error); }
+
+input, select, textarea {
   font: inherit;
-  width: 100%;
+  color: var(--text);
+  background: var(--sub-alt);
+  border: none;
+  border-radius: 8px;
   padding: 10px 12px;
-  color: var(--ink);
-  background: transparent;
-  border: 1.5px solid var(--guide);
-  border-radius: 4px;
-  resize: vertical;
 }
+input, textarea { width: 100%; }
+textarea { resize: vertical; }
+::placeholder { color: var(--sub); }
 
 kbd {
   font: 0.75rem var(--font);
-  padding: 0 5px;
-  border: 1px solid currentColor;
-  border-radius: 3px;
-  opacity: 0.75;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--sub-alt);
+  color: var(--text);
 }
 
 /* Layout pieces */
@@ -131,23 +120,24 @@ kbd {
   display: flex;
   align-items: baseline;
   gap: 14px;
-  margin-bottom: 36px;
+  margin-bottom: 40px;
 }
-.brand { font-size: 2rem; }
+.brand { font-size: 2rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
 
 .section-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
-/* Library: a plain list ruled like the page */
+/* Library */
 
-.passages { list-style: none; padding: 0; margin: 0 0 40px; border-top: 1px solid var(--guide); }
+.passages { list-style: none; padding: 0; margin: 0 0 40px; display: grid; gap: 4px; }
 
-.passage-row { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--guide); }
+.passage-row { display: flex; align-items: center; gap: 4px; border-radius: 8px; }
+.passage-row:hover { background: var(--sub-alt); }
 
 .passage-open {
   flex: 1;
@@ -155,72 +145,57 @@ kbd {
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
-  padding: 14px 0;
-  border: none;
+  padding: 12px 14px;
   background: none;
-  font-size: 1.1rem;
   text-align: left;
 }
-.passage-open:hover { background: none; }
-.passage-open:hover strong { text-decoration: underline; }
+.passage-open:hover { background: none; color: var(--text); }
+.passage-open strong { font-weight: 500; }
 
-.editor { display: grid; gap: 14px; }
+.editor { display: grid; gap: 12px; }
 
-/* Practice */
+/* Practice: the step bar, the streak counter, then the words */
 
-.ladder { display: flex; flex-wrap: wrap; gap: 4px 22px; margin-bottom: 18px; }
-
-.rung {
-  padding: 4px 0;
-  border: none;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  background: none;
-  color: var(--graphite);
+.ladder {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 4px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 32px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--sub-alt);
 }
-.rung:hover { background: none; color: var(--ink); }
-.rung:disabled { pointer-events: none; }
-.rung.active { color: var(--ink); border-bottom-color: var(--ink); font-weight: 700; }
 
-.tick { margin-left: 5px; color: var(--red-pen); font-weight: 700; }
+.rung { padding: 4px 10px; background: none; color: var(--sub); font-size: 0.85rem; }
+.rung:hover { background: none; color: var(--text); }
+.rung:disabled { pointer-events: none; }
+.rung.active { color: var(--main); }
+
+.tick { margin-left: 6px; color: var(--main); }
 
 .meta {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+  align-items: baseline;
+  gap: 16px;
   flex-wrap: wrap;
-  font-size: 0.95rem;
   margin-bottom: 8px;
+  font-size: 0.85rem;
 }
 
-.tally { display: inline-flex; gap: 5px; align-items: center; }
-.stroke { width: 3px; height: 17px; border-radius: 2px; background: var(--guide); transform: rotate(10deg); }
-.stroke.marked { background: var(--ink); }
+.streak { font-size: 1.5rem; color: var(--main); }
 
-.reps { display: inline-flex; align-items: center; gap: 6px; color: var(--graphite); font-size: 0.95rem; }
+.reps { display: inline-flex; align-items: center; gap: 8px; color: var(--sub); font-size: 0.85rem; }
+.reps select { padding: 4px 8px; }
 
-.text-box { padding: 8px 0; cursor: text; }
+.text-box { cursor: text; }
 
-/*
- * Handwriting guide lines, drawn by masking the guide colour with one tile per
- * row: a top line, a dashed midline at x-height, and a heavier baseline. The
- * tile is sized in em, so the lines stay aligned with the text at any font size.
- */
 .passage {
-  position: relative;
-  isolation: isolate;
   margin: 0;
-  font-size: clamp(1.3rem, 3.6vw, 1.75rem);
-  line-height: 2;
-}
-.passage::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: var(--guide);
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 40' preserveAspectRatio='none'%3E%3Crect y='11.4' width='10' height='.7' fill-opacity='.4'/%3E%3Crect y='19.2' width='5' height='.7' fill-opacity='.4'/%3E%3Crect y='27.6' width='10' height='1.1'/%3E%3C/svg%3E") 0 0 / 0.5em 2em repeat;
+  font-size: clamp(1.15rem, 2.8vw, 1.5rem);
+  line-height: 1.75;
 }
 
 .summary {
@@ -229,46 +204,42 @@ kbd {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 20px;
-  padding-top: 14px;
-  border-top: 1.5px solid var(--ink);
+  margin-top: 28px;
 }
-.summary p { margin: 0; }
-.summary.failed p { color: var(--red-pen); }
+.summary p { margin: 0; font-size: 1.1rem; }
+.summary.failed p { color: var(--error); }
+.summary.level-up p, .summary.mastered p { color: var(--main); }
 
 /* Words: one class per LOOK in components.js */
 
-.word.correct { color: var(--ink); }
-.word.upcoming { color: var(--pencil); }
+.word { color: var(--sub); }
+.word.correct { color: var(--text); }
 
-.word.missed, .wrong-letter {
-  color: var(--red-pen);
-  text-decoration: underline wavy var(--red-pen) 1.5px;
-  text-underline-offset: 6px;
-}
+.word.missed, .wrong-letter { color: var(--error); }
 
 .word.blank {
   display: inline-block;
-  width: calc(var(--letters) * 0.5em);
-  border-bottom: 2px solid var(--pencil);
+  width: calc(var(--letters) * 0.6em);
+  border-bottom: 2px solid var(--sub);
 }
 
+.word.typing { color: var(--text); }
 .word.typing::after {
   content: "";
   display: inline-block;
   width: 2px;
-  height: 1em;
+  height: 1.1em;
   margin-left: 1px;
-  background: var(--ink);
-  vertical-align: -0.15em;
-  animation: blink 1s steps(1) infinite;
+  background: var(--main);
+  vertical-align: -0.2em;
+  animation: blink 1s ease-in-out 0.5s infinite;
 }
 
-/* The word you're on: ink, underlined in ink. */
-.word.current { color: var(--ink); text-decoration: underline 2px var(--ink); text-underline-offset: 6px; }
-.word.blank.current { border-bottom: 3px solid var(--ink); }
+/* The word you're on: a caret in front of it, like Monkeytype's. It holds steady while you type and blinks once you pause. */
+.word.current { box-shadow: inset 2px 0 0 var(--main); padding-left: 3px; animation: caret-blink 1s ease-in-out 0.5s infinite; }
+.word.blank.current { border-bottom-color: var(--main); }
 
-/* A word you just answered writes itself out, letter by letter. */
+/* A word you just answered appears letter by letter. */
 .word.reveal { animation: write-out calc(var(--letters) * 30ms) steps(var(--letters)) both; }
 
 @keyframes write-out {
@@ -280,7 +251,11 @@ kbd {
   50% { opacity: 0; }
 }
 
-/* Confetti: strips in the page's own inks fall from above the screen */
+@keyframes caret-blink {
+  50% { box-shadow: inset 2px 0 0 transparent; }
+}
+
+/* Confetti: strips in the theme's colours fall from above the screen */
 
 .confetti {
   position: fixed;
@@ -295,7 +270,7 @@ kbd {
   left: var(--x);
   width: 7px;
   height: 14px;
-  border-radius: 1px;
+  border-radius: 2px;
   background: var(--color);
   animation: confetti-fall 2.8s cubic-bezier(0.3, 0.6, 0.6, 1) var(--delay) forwards;
 }
@@ -305,6 +280,6 @@ kbd {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .word.reveal, .word.typing::after { animation: none; }
+  .word.reveal, .word.typing::after, .word.current { animation: none; }
   .confetti { display: none; }
 }
