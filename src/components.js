@@ -10,7 +10,7 @@
  *   │   └── PassageEditor → RepsPicker
  *   └── Practice
  *       ├── StepLadder
- *       ├── StreakDots, RepsPicker, MicButton
+ *       ├── StreakCount, RepsPicker, MicButton
  *       ├── RunText → Word (one per word)
  *       └── RunSummary
  */
@@ -30,7 +30,7 @@ const VIEWS = {
 export function App({ state, actions }) {
   return el('div', { class: 'app' },
     el('header', { class: 'top' },
-      el('h1', { class: 'brand' }, 'Memo'),
+      el('h1', { class: 'brand' }, 'memo'),
       el('span', { class: 'muted' }, 'memorize anything by typing or saying it')),
     VIEWS[state.view]({ state, actions }));
 }
@@ -42,7 +42,7 @@ function Library({ state, actions }) {
     el('div', { class: 'section-head' },
       el('h2', {}, 'Your passages'),
       BackupButtons({ onExport: actions.exportBackup, onImport: actions.importBackup })),
-    el('ul', { class: 'cards' },
+    el('ul', { class: 'passages' },
       state.passages.map((passage) => PassageCard({
         passage,
         onOpen: () => actions.openPassage(passage.id),
@@ -67,12 +67,12 @@ function BackupButtons({ onExport, onImport }) {
 }
 
 function PassageCard({ passage, onOpen, onEdit, onDelete }) {
-  return el('li', { class: 'card' },
-    el('button', { type: 'button', class: 'card-main', onclick: onOpen },
+  return el('li', { class: 'passage-row' },
+    el('button', { type: 'button', class: 'passage-open', onclick: onOpen },
       el('strong', {}, passage.title),
       el('span', { class: 'muted' }, progressLabel(passage.progress))),
-    el('button', { type: 'button', onclick: onEdit }, 'Edit'),
-    el('button', { type: 'button', class: 'danger', onclick: onDelete }, 'Delete'));
+    el('button', { type: 'button', class: 'quiet', onclick: onEdit }, 'Edit'),
+    el('button', { type: 'button', class: 'quiet danger', onclick: onDelete }, 'Delete'));
 }
 
 /** Add a passage when `passage` is undefined, otherwise edit it. */
@@ -114,12 +114,12 @@ function Practice({ state, actions }) {
   return el('section', { class: 'practice', onclick: refocusUnlessPicking },
     el('div', { class: 'section-head' },
       el('h2', {}, passage.title),
-      el('button', { type: 'button', onclick: actions.goToLibrary }, '← All passages')),
+      el('button', { type: 'button', onclick: actions.goToLibrary }, 'All passages')),
     StepLadder({ progress, activeStep: state.run.step, onPick: actions.goToStep }),
     el('div', { class: 'meta' },
+      StreakCount({ cleanRuns: justCompletedStep ? reps : progress.cleanRuns, reps }),
       el('span', { class: 'muted' }, state.listening ? 'Listening… say each word out loud.' : state.run.step.hint),
-      el('span', { class: 'row' },
-        StreakDots({ cleanRuns: justCompletedStep ? reps : progress.cleanRuns, reps }),
+      el('span', { class: 'row controls' },
         RepsPicker({ reps, onChange: actions.setReps }),
         MicButton({ isListening: state.listening, onToggle: actions.toggleListening }))),
     el('div', { class: 'text-box' }, RunText({ run: state.run })),
@@ -130,37 +130,36 @@ function Practice({ state, actions }) {
       reps,
       onContinue: actions.continueAfterRun,
     }),
-    el('p', { class: 'note' }, 'Esc goes back to your passages.'));
+    el('p', { class: 'note' }, el('kbd', {}, 'esc'), ' back to your passages'));
 }
 
-/** Any step can be picked; green only marks steps actually completed. */
+/** Any step can be picked; only steps actually completed get a tick. */
 function StepLadder({ progress, activeStep, onPick }) {
   return el('nav', { class: 'ladder', 'aria-label': 'Steps' },
     STEPS.map((step, i) => el('button', {
       type: 'button',
-      class: classes('rung', step === activeStep && 'active', progress.completed.includes(i) && 'done'),
+      class: classes('rung', step === activeStep && 'active'),
       onclick: () => onPick(i),
-    }, stepName(step))));
+    }, step.label, progress.completed.includes(i) && el('span', { class: 'tick', 'aria-label': 'completed' }, '✓'))));
 }
 
 /** Shown even where speech isn't supported (Firefox), so people know the option exists. */
 function MicButton({ isListening, onToggle }) {
   if (!isSpeechSupported) {
     return el('span', { class: 'row' },
-      el('button', { type: 'button', class: 'mic', disabled: true }, '🎤 Speak'),
-      el('span', { class: 'note' }, 'Needs Chrome, Edge or Safari'));
+      el('button', { type: 'button', class: 'mic', disabled: true }, 'speak'),
+      el('span', { class: 'note' }, 'needs Chrome, Edge or Safari'));
   }
   return el('button', {
     type: 'button',
     class: classes('mic', isListening && 'listening'),
     'aria-pressed': String(isListening),
     onclick: onToggle,
-  }, isListening ? 'Stop listening' : '🎤 Speak');
+  }, isListening ? 'stop listening' : 'speak');
 }
 
-function StreakDots({ cleanRuns, reps }) {
-  return el('span', { class: 'dots', title: `${cleanRuns} of ${reps} clean runs in a row` },
-    Array.from({ length: reps }, (_, i) => el('span', { class: classes('dot', i < cleanRuns && 'filled') })));
+function StreakCount({ cleanRuns, reps }) {
+  return el('span', { class: 'streak', title: `${cleanRuns} of ${reps} clean runs in a row` }, `${cleanRuns}/${reps}`);
 }
 
 /**
@@ -238,11 +237,11 @@ const SUMMARY = {
     button: 'Next run',
   },
   [RESULT.LEVEL_UP]: {
-    message: ({ progress }) => `Step complete! Next: ${stepName(currentStep(progress))}.`,
+    message: ({ progress }) => `Step complete! Next: ${currentStep(progress).label}.`,
     button: 'Next step',
   },
   [RESULT.MASTERED]: {
-    message: () => 'Memorized! You recalled the whole thing from memory. 🎉',
+    message: () => 'Memorized! You recalled the whole thing from memory.',
     button: 'Done',
   },
 };
@@ -256,7 +255,7 @@ function RunSummary({ result, run, progress, reps, onContinue }) {
     el('button', { type: 'button', class: 'primary', onclick: onContinue }, `${button} `, el('kbd', {}, 'Enter')));
 }
 
-const CONFETTI_COLORS = ['#2f6fde', '#2e8b57', '#d23c3c', '#f5b301', '#8e44ad'];
+const CONFETTI_COLORS = ['var(--main)', 'var(--text)', 'var(--sub)', 'var(--error)'];
 
 /** Each piece gets a random column, drift, spin and delay; style.css makes it fall. */
 function Confetti({ pieces }) {
@@ -274,13 +273,9 @@ function Confetti({ pieces }) {
     })));
 }
 
-function stepName(step) {
-  return `${step.mode} · ${step.label}`;
-}
-
 function progressLabel(progress) {
   if (isMastered(progress)) return 'Memorized ✓';
-  return `Step ${progress.step + 1} of ${STEPS.length}: ${stepName(currentStep(progress))}`;
+  return `${currentStep(progress).label}, step ${progress.step + 1} of ${STEPS.length}`;
 }
 
 function plural(count, noun) {
