@@ -17,9 +17,17 @@
  *   Spaces and punctuation never need typing. Words with no letters ("—") fill in automatically.
  *   `cursor` is the word being answered. `lastAnswered` drives the reveal animation.
  *   Hidden words are reshuffled every run, so you can't learn the pattern instead of the text.
+ *
+ * READ ALOUD: an unchecked warm-up before the ladder. You say the passage out loud while
+ *   the screen shows less each time: the full text, then each word's first letter, then
+ *   only the first word of each line. `readStep` runs 0..READ_VIEWS.length, where the
+ *   last value is the "now say it from memory" finish screen.
+ *
+ * SETTINGS: saved per device, not in backups. `textSize` scales the passage text, and
+ *   `theme` is light, dark, or follows the system.
  */
 
-export const VIEW = { LIBRARY: 'library', PRACTICE: 'practice' };
+export const VIEW = { LIBRARY: 'library', PRACTICE: 'practice', READ: 'read' };
 
 export const INPUT = { FIRST_LETTER: 'first-letter', WHOLE_WORD: 'whole-word' };
 
@@ -54,6 +62,32 @@ export const STEPS = [
 export const REPS_OPTIONS = [1, 2, 3, 4, 5];
 
 export const DEFAULT_REPS = 3;
+
+export const READ_VIEWS = [
+  {
+    label: 'Full text',
+    hint: 'Read it out loud a few times. Look up from the screen as much as you can.',
+    shows: (line) => line,
+  },
+  {
+    label: 'First letters',
+    hint: 'Say every word from its first letter. Go slowly enough not to skip any.',
+    shows: (line) => line.split(/(\s+)/).map(firstLetterOnly).join(''),
+  },
+  {
+    label: 'First words',
+    hint: 'Only the first word of each line is left. Say it through without pausing.',
+    shows: (line) => line.trim().split(/\s+/)[0],
+  },
+];
+
+export const TEXT_SIZES = ['small', 'medium', 'large'];
+
+export const THEMES = ['system', 'light', 'dark'];
+
+export const DEFAULT_SETTINGS = { textSize: 'medium', theme: 'system' };
+
+const SPEAKING_WORDS_PER_MINUTE = 130;
 
 export const SAMPLE_PASSAGE = {
   title: 'Psalm 23 (opening)',
@@ -145,6 +179,26 @@ export function toKey(text) {
 }
 
 /** Line breaks (up to 2) are kept on each word so poems and paragraphs keep their shape. */
+export function wordCount(text) {
+  return parseWords(text).filter((word) => word.key).length;
+}
+
+export function speakingSeconds(text) {
+  return Math.round((wordCount(text) / SPEAKING_WORDS_PER_MINUTE) * 60);
+}
+
+/** "shepherd;" → "s;", "(Lord)" → "(L)", "name's" → "n". Chunks with no letters stay as they are. */
+function firstLetterOnly(chunk) {
+  return chunk.replace(/^([^\p{L}\p{N}]*[\p{L}\p{N}])[\p{L}\p{N}'’-]*/u, '$1');
+}
+
+export function restoreSettings(saved) {
+  return {
+    textSize: TEXT_SIZES.includes(saved?.textSize) ? saved.textSize : DEFAULT_SETTINGS.textSize,
+    theme: THEMES.includes(saved?.theme) ? saved.theme : DEFAULT_SETTINGS.theme,
+  };
+}
+
 export function parseWords(text) {
   const words = [];
   let lineBreaksBefore = 0;

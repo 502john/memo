@@ -6,42 +6,55 @@
  * `state` is the only mutable variable in the app. Actions are the only code
  * that changes it, and every change goes through setState.
  *
- *   view        LIBRARY or PRACTICE
+ *   view        LIBRARY, PRACTICE or READ (read aloud)
  *   passages    saved texts, each with its own reps and ladder progress
- *   activeId    passage open in Practice
+ *   settings    saved per device: text size and theme (see state.js)
+ *   activeId    passage open in Practice or Read aloud
+ *   readStep    which read-aloud view is showing (see state.js READ_VIEWS)
  *   editingId   passage open in the editor (null = adding a new one)
  *   run         the current pass through the text (see state.js)
  *   lastResult  RESULT of the run that just finished
  *   listening   whether the mic is answering instead of the keyboard (see speech.js)
  *   heard       the word the mic is still hearing, previewed in the current word's slot
+ *   fullscreen  true or false, or null where the browser can't go fullscreen (iPhone Safari)
  *
  * Typing goes into a hidden <input> (index.html) rather than a keydown
  * listener, because only a focused input opens the on-screen keyboard on phones.
+ * Other shortcuts listen on the document: f toggles fullscreen outside Practice
+ * (where f is an answer), and in Read aloud ctrl/cmd+enter or → moves on, ← goes back.
+ *
+ * The "system" theme follows the OS, so render() re-reads it and an OS switch re-renders.
+ * The service worker (sw.js) makes the app work offline; where it can't register
+ * (plain http, file://) the app simply works online only.
  */
 
 import { App } from './components.js';
 import { loadSaved, save, downloadBackup, readBackup } from './storage.js';
 import { startListening, stopListening } from './speech.js';
 import {
-  VIEW, RUN, RESULT, DEFAULT_REPS, SAMPLE_PASSAGE,
-  createPassage, restorePassages, replacePassage, mergePassages, newProgress, moveToStep, currentStep,
+  VIEW, RUN, RESULT, DEFAULT_REPS, SAMPLE_PASSAGE, READ_VIEWS, THEMES,
+  restoreSettings, createPassage, restorePassages, replacePassage, mergePassages, newProgress, moveToStep, currentStep,
   startRun, typeKey, sayWord, scoreRun,
 } from './state.js';
 
 const root = document.getElementById('app');
 const keyboard = document.getElementById('keyboard');
+const prefersLight = matchMedia('(prefers-color-scheme: light)');
 
 const saved = loadSaved();
 
 let state = {
   view: VIEW.LIBRARY,
   passages: saved ? restorePassages(saved.passages) : [createPassage(SAMPLE_PASSAGE.title, SAMPLE_PASSAGE.text, DEFAULT_REPS)],
+  settings: restoreSettings(saved?.settings),
   activeId: null,
+  readStep: 0,
   editingId: null,
   run: null,
   lastResult: null,
   listening: false,
   heard: '',
+  fullscreen: document.fullscreenEnabled ? false : null,
 };
 
 function setState(changes) {
@@ -51,6 +64,7 @@ function setState(changes) {
 }
 
 function render() {
+  applySettings(state.settings);
   root.replaceChildren(App({ state, actions }));
 
   if (state.view === VIEW.PRACTICE) {
@@ -65,6 +79,14 @@ const actions = {
   openPassage(id) {
     const passage = findPassage(id);
     setState({ view: VIEW.PRACTICE, activeId: id, run: freshRun(passage), lastResult: null });
+  },
+
+  openReadAloud(id) {
+    setState({ view: VIEW.READ, activeId: id, readStep: 0 });
+  },
+
+  goToReadStep(readStep) {
+    setState({ readStep: Math.min(Math.max(readStep, 0), READ_VIEWS.length) });
   },
 
   editPassage(id) {
@@ -154,7 +176,27 @@ const actions = {
   focusKeyboard() {
     keyboard.focus({ preventScroll: true });
   },
+
+  setTextSize(textSize) {
+    setState({ settings: { ...state.settings, textSize } });
+  },
+
+  cycleTheme() {
+    const next = THEMES[(THEMES.indexOf(state.settings.theme) + 1) % THEMES.length];
+    setState({ settings: { ...state.settings, theme: next } });
+  },
+
+  toggleFullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  },
 };
+
+function applySettings({ textSize, theme }) {
+  const page = document.documentElement;
+  page.dataset.theme = theme === 'system' ? (prefersLight.matches ? 'light' : 'dark') : theme;
+  page.dataset.textSize = textSize;
+}
 
 function findPassage(id) {
   return state.passages.find((passage) => passage.id === id);
@@ -188,5 +230,20 @@ keyboard.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && state.run?.status === RUN.FINISHED) actions.continueAfterRun();
   if (event.key === 'Escape') actions.goToLibrary();
 });
+
+document.addEventListener('keydown', (event) => {
+  const isTypingInField = event.target.matches('input, textarea, select');
+  if (event.key === 'f' && !isTypingInField && state.fullscreen !== null) actions.toggleFullscreen();
+
+  if (state.view !== VIEW.READ) return;
+  const isNext = event.key === 'ArrowRight' || (event.key === 'Enter' && (event.ctrlKey || event.metaKey));
+  if (isNext) actions.goToReadStep(state.readStep + 1);
+  if (event.key === 'ArrowLeft') actions.goToReadStep(state.readStep - 1);
+  if (event.key === 'Escape') actions.goToLibrary();
+});
+
+document.addEventListener('fullscreenchange', () => setState({ fullscreen: Boolean(document.fullscreenElement) }));
+prefersLight.addEventListener('change', render);
+navigator.serviceWorker?.register('sw.js').catch(() => {});
 
 render();

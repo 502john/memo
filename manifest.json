@@ -1,0 +1,10 @@
+{
+  "name": "Memo",
+  "short_name": "Memo",
+  "description": "Memorize any text by reading it aloud, then typing or saying it from memory.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#323437",
+  "theme_color": "#323437",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

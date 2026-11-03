@@ -9,6 +9,9 @@
  *   text      answered words and primary text
  *   main      the caret, the active step and the streak counter
  *   error     missed words and wrong input
+ *
+ * app.js sets data-theme ("light" or "dark", resolving "system" from the OS) and
+ * data-text-size on <html>; --reading-size is the passage text size for each.
  */
 
 /* Self-hosted so visitors never contact Google (see fonts/OFL.txt for the font's licence). */
@@ -21,7 +24,7 @@
 }
 
 :root {
-  color-scheme: dark light;
+  color-scheme: dark;
   --bg: #323437;
   --sub-alt: #2c2e31;
   --sub: #646669;
@@ -29,17 +32,20 @@
   --main: #e2b714;
   --error: #ca4754;
   --font: "Roboto Mono", ui-monospace, Menlo, monospace;
+  --reading-size: clamp(1.15rem, 2.8vw, 1.5rem);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #e1e1e3;
-    --sub-alt: #d1d3d8;
-    --sub: #aaaeb3;
-    --text: #323437;
-    --error: #da3333;
-  }
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #e1e1e3;
+  --sub-alt: #d1d3d8;
+  --sub: #aaaeb3;
+  --text: #323437;
+  --error: #da3333;
 }
+
+:root[data-text-size="small"] { --reading-size: clamp(1rem, 2.4vw, 1.2rem); }
+:root[data-text-size="large"] { --reading-size: clamp(1.4rem, 3.6vw, 2rem); }
 
 /* Base */
 
@@ -97,6 +103,8 @@ button, .button {
 }
 button:hover, .button:hover { background: var(--text); color: var(--bg); }
 button.primary { color: var(--main); }
+button:disabled { cursor: not-allowed; opacity: 0.5; }
+button:disabled:hover { background: var(--sub-alt); color: var(--text); }
 button.primary:hover { background: var(--main); color: var(--bg); }
 
 button.quiet { background: none; color: var(--sub); padding: 6px 10px; }
@@ -127,10 +135,18 @@ kbd {
 
 .top {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 14px;
   margin-bottom: 40px;
 }
+
+.toolbar { display: flex; align-items: baseline; gap: 2px; margin-left: auto; }
+.toolbar button { padding: 4px 8px; }
+.toolbar .active { color: var(--main); }
+.size-small { font-size: 0.75rem; }
+.size-medium { font-size: 0.95rem; }
+.size-large { font-size: 1.2rem; }
 .brand { font-size: 2rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
 
 .section-head {
@@ -160,6 +176,7 @@ kbd {
 }
 .passage-open:hover { background: none; color: var(--text); }
 .passage-open strong { font-weight: 500; }
+.passage-name { display: flex; flex-direction: column; gap: 2px; }
 
 .editor { display: grid; gap: 12px; }
 
@@ -202,8 +219,6 @@ kbd {
 
 .mic { padding: 4px 12px; font-size: 0.85rem; }
 .mic.listening { color: var(--bg); background: var(--main); animation: pulse 1.4s ease-in-out infinite; }
-.mic:disabled { cursor: not-allowed; opacity: 0.5; }
-.mic:disabled:hover { background: var(--sub-alt); color: var(--text); }
 
 @keyframes pulse {
   50% { opacity: 0.6; }
@@ -213,9 +228,20 @@ kbd {
 
 .passage {
   margin: 0;
-  font-size: clamp(1.15rem, 2.8vw, 1.5rem);
+  font-size: var(--reading-size);
   line-height: 1.75;
 }
+
+/* Read aloud */
+
+.read-text {
+  margin: 0 0 28px;
+  font-size: var(--reading-size);
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.read-done { margin: 0 0 28px; font-size: 1.2rem; color: var(--main); }
 
 .summary {
   display: flex;

@@ -4,10 +4,12 @@
  * They call the callbacks (actions) they are given.
  *
  *   App
+ *   ├── Toolbar
  *   ├── Library
  *   │   ├── BackupButtons
  *   │   ├── PassageCard (one per passage)
  *   │   └── PassageEditor → RepsPicker
+ *   ├── ReadAloud
  *   └── Practice
  *       ├── StepLadder
  *       ├── StreakCount, RepsPicker, MicButton
@@ -18,21 +20,37 @@
 import { el, classes } from './dom.js';
 import { isSpeechSupported } from './speech.js';
 import {
-  VIEW, INPUT, RUN, WORD, RESULT, STEPS, REPS_OPTIONS, DEFAULT_REPS,
-  currentStep, isMastered,
+  VIEW, INPUT, RUN, WORD, RESULT, STEPS, REPS_OPTIONS, DEFAULT_REPS, READ_VIEWS, TEXT_SIZES,
+  currentStep, isMastered, wordCount, speakingSeconds,
 } from './state.js';
 
 const VIEWS = {
   [VIEW.LIBRARY]: Library,
   [VIEW.PRACTICE]: Practice,
+  [VIEW.READ]: ReadAloud,
 };
 
 export function App({ state, actions }) {
   return el('div', { class: 'app' },
     el('header', { class: 'top' },
       el('h1', { class: 'brand' }, 'memo'),
-      el('span', { class: 'muted' }, 'memorize anything by typing or saying it')),
+      el('span', { class: 'muted' }, 'memorize anything by typing or saying it'),
+      Toolbar({ settings: state.settings, fullscreen: state.fullscreen, actions })),
     VIEWS[state.view]({ state, actions }));
+}
+
+/** Text size, theme and fullscreen. The fullscreen button is left out where the browser can't do it. */
+function Toolbar({ settings, fullscreen, actions }) {
+  return el('div', { class: 'toolbar' },
+    TEXT_SIZES.map((size) => el('button', {
+      type: 'button',
+      class: classes('quiet', `size-${size}`, settings.textSize === size && 'active'),
+      'aria-label': `${size} text`,
+      onclick: () => actions.setTextSize(size),
+    }, 'A')),
+    el('button', { type: 'button', class: 'quiet', onclick: actions.cycleTheme }, `theme: ${settings.theme}`),
+    fullscreen !== null && el('button', { type: 'button', class: 'quiet', onclick: actions.toggleFullscreen },
+      fullscreen ? 'exit fullscreen' : 'fullscreen'));
 }
 
 function Library({ state, actions }) {
@@ -46,6 +64,7 @@ function Library({ state, actions }) {
       state.passages.map((passage) => PassageCard({
         passage,
         onOpen: () => actions.openPassage(passage.id),
+        onRead: () => actions.openReadAloud(passage.id),
         onEdit: () => actions.editPassage(passage.id),
         onDelete: () => actions.deletePassage(passage.id),
       }))),
@@ -66,18 +85,25 @@ function BackupButtons({ onExport, onImport }) {
       })));
 }
 
-function PassageCard({ passage, onOpen, onEdit, onDelete }) {
+function PassageCard({ passage, onOpen, onRead, onEdit, onDelete }) {
   return el('li', { class: 'passage-row' },
     el('button', { type: 'button', class: 'passage-open', onclick: onOpen },
-      el('strong', {}, passage.title),
+      el('span', { class: 'passage-name' },
+        el('strong', {}, passage.title),
+        el('span', { class: 'note' }, lengthLabel(passage.text))),
       el('span', { class: 'muted' }, progressLabel(passage.progress))),
+    el('button', { type: 'button', class: 'quiet', onclick: onRead }, 'Read aloud'),
     el('button', { type: 'button', class: 'quiet', onclick: onEdit }, 'Edit'),
     el('button', { type: 'button', class: 'quiet danger', onclick: onDelete }, 'Delete'));
 }
 
-/** Add a passage when `passage` is undefined, otherwise edit it. */
+/**
+ * Add a passage when `passage` is undefined, otherwise edit it. The fields aren't
+ * kept in state, so the word count under the text box updates itself as you type.
+ */
 function PassageEditor({ passage, onSave, onCancel }) {
   const isEditing = Boolean(passage);
+  const counter = el('span', { class: 'note' }, lengthLabel(passage?.text ?? ''));
 
   function submit(event) {
     event.preventDefault();
@@ -88,8 +114,14 @@ function PassageEditor({ passage, onSave, onCancel }) {
   return el('form', { class: 'editor', onsubmit: submit },
     el('h3', {}, isEditing ? `Edit “${passage.title}”` : 'Add a passage'),
     el('input', { name: 'title', placeholder: 'Title, e.g. Psalm 23', required: true, value: passage?.title }),
-    el('textarea', { name: 'text', rows: 6, placeholder: 'Paste the text you want to memorize…', required: true },
-      passage?.text),
+    el('textarea', {
+      name: 'text',
+      rows: 6,
+      placeholder: 'Paste the text you want to memorize. Keep its line breaks.',
+      required: true,
+      oninput: (event) => { counter.textContent = lengthLabel(event.target.value); },
+    }, passage?.text),
+    counter,
     RepsPicker({ reps: passage?.reps ?? DEFAULT_REPS }),
     isEditing && el('p', { class: 'note' }, "Changing the text resets this passage's progress."),
     el('div', { class: 'row' },
@@ -102,6 +134,41 @@ function RepsPicker({ reps, onChange }) {
   return el('label', { class: 'reps' }, 'Clean runs per step ',
     el('select', { name: 'reps', onchange: onChange && ((event) => onChange(Number(event.target.value))) },
       REPS_OPTIONS.map((option) => el('option', { value: option, selected: option === reps }, option))));
+}
+
+/**
+ * Read aloud: an unchecked warm-up. Each view shows less of the passage, and the
+ * last step is a finish screen that hands over to Practice.
+ */
+function ReadAloud({ state, actions }) {
+  const passage = state.passages.find((passage) => passage.id === state.activeId);
+  const view = READ_VIEWS[state.readStep];
+
+  return el('section', { class: 'read' },
+    el('div', { class: 'section-head' },
+      el('h2', {}, passage.title),
+      el('button', { type: 'button', onclick: actions.goToLibrary }, 'All passages')),
+    el('nav', { class: 'ladder', 'aria-label': 'Read aloud steps' },
+      READ_VIEWS.map((step, i) => el('button', {
+        type: 'button',
+        class: classes('rung', i === state.readStep && 'active'),
+        onclick: () => actions.goToReadStep(i),
+      }, step.label))),
+    el('div', { class: 'meta' },
+      el('span', { class: 'muted' }, view ? view.hint : 'Now say it once more without looking.'),
+      el('span', { class: 'note' }, lengthLabel(passage.text))),
+    view
+      ? el('p', { class: 'read-text' }, passage.text.split('\n').map(view.shows).join('\n'))
+      : el('p', { class: 'read-done' }, 'Done. When you can say it from memory, test yourself in Practice.'),
+    el('div', { class: 'row' },
+      el('button', { type: 'button', onclick: () => actions.goToReadStep(state.readStep - 1), disabled: state.readStep === 0 }, 'Back'),
+      view
+        ? el('button', { type: 'button', class: 'primary', onclick: () => actions.goToReadStep(state.readStep + 1) }, 'Next')
+        : [
+          el('button', { type: 'button', onclick: () => actions.goToReadStep(0) }, 'Start over'),
+          el('button', { type: 'button', class: 'primary', onclick: () => actions.openPassage(passage.id) }, 'Practice'),
+        ],
+      el('span', { class: 'note' }, el('kbd', {}, 'ctrl/cmd'), ' ', el('kbd', {}, 'enter'), ' next  ', el('kbd', {}, 'esc'), ' back to your passages')));
 }
 
 function Practice({ state, actions }) {
@@ -278,6 +345,13 @@ function Confetti({ pieces }) {
 function progressLabel(progress) {
   if (isMastered(progress)) return 'Memorized ✓';
   return `${currentStep(progress).label}, step ${progress.step + 1} of ${STEPS.length}`;
+}
+
+/** "41 words, about 20 seconds to say" */
+function lengthLabel(text) {
+  const seconds = speakingSeconds(text);
+  const duration = seconds < 60 ? `${Math.max(5, Math.round(seconds / 5) * 5)} seconds` : `${Math.round(seconds / 60)} min`;
+  return `${plural(wordCount(text), 'word')}, about ${duration} to say`;
 }
 
 function plural(count, noun) {

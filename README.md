@@ -16,6 +16,13 @@ In modes 1–2 a wrong key marks the word as missed and moves on. In mode 3 a wr
 
 **Speak instead of type:** press **speak** and say each word. The same rules apply: in modes 1–2 a misheard word is a miss, and in mode 3 it stays red until you say it right. This uses the browser's built-in speech recognition (Chrome, Edge, Safari; not Firefox). Chrome sends the audio to Google to transcribe it.
 
+**Read aloud first:** before testing yourself, use **Read aloud** on a passage as a warm-up. Say it out loud while the screen shows less each time: the full text, then each word's first letter, then only the first word of each line. Nothing is checked. Move on with **Next**, `ctrl/cmd + enter` or `→`.
+
+**Also:**
+- Word count and speaking time for each passage.
+- Three text sizes, a light/dark/system theme switch, and fullscreen (`f`).
+- Works offline after the first visit, and can be installed as an app.
+
 ## Run locally
 
 The app uses ES modules, so it needs a local server. Opening the file directly won't work.
@@ -37,6 +44,7 @@ GitHub → **Settings → Pages → Deploy from a branch → `main` / root**. Ev
 | `src/components.js` | UI as function components: `props → DOM element`. |
 | `src/app.js` | The single `state` object, the actions that change it, and `render`. |
 | `src/speech.js` | Speech input through the browser's Web Speech API. |
+| `sw.js` | Service worker that caches the app so it works offline. |
 | `src/storage.js` | localStorage, plus export and import of backups. |
 | `src/dom.js` | `el()`, the helper every component is built with. |
 
