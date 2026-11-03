@@ -1,6 +1,7 @@
 /**
  * storage.js: everything lives in the user's browser (localStorage).
- * There is no server. Export and import move data between browsers.
+ * There is no server. Export and import move passages between browsers; settings
+ * stay with the device.
  * Only the outer shape is checked here; state.js restorePassages checks each passage.
  * Backups over 5 MB are refused, which is more than localStorage can hold anyway.
  */
@@ -18,9 +19,9 @@ export function loadSaved() {
 }
 
 /** Private browsing or full storage can make saving fail; the app keeps working in memory. */
-export function save({ passages }) {
+export function save({ passages, settings }) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ passages }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ passages, settings }));
   } catch {}
 }
 
