@@ -10,12 +10,13 @@
  *   │   └── PassageEditor → RepsPicker
  *   └── Practice
  *       ├── StepLadder
- *       ├── StreakCount
+ *       ├── StreakCount, RepsPicker, MicButton
  *       ├── RunText → Word (one per word)
  *       └── RunSummary
  */
 
 import { el, classes } from './dom.js';
+import { isSpeechSupported } from './speech.js';
 import {
   VIEW, INPUT, RUN, WORD, RESULT, STEPS, REPS_OPTIONS, DEFAULT_REPS,
   currentStep, isMastered,
@@ -30,7 +31,7 @@ export function App({ state, actions }) {
   return el('div', { class: 'app' },
     el('header', { class: 'top' },
       el('h1', { class: 'brand' }, 'memo'),
-      el('span', { class: 'muted' }, 'memorize anything by typing it')),
+      el('span', { class: 'muted' }, 'memorize anything by typing or saying it')),
     VIEWS[state.view]({ state, actions }));
 }
 
@@ -74,7 +75,7 @@ function PassageCard({ passage, onOpen, onEdit, onDelete }) {
     el('button', { type: 'button', class: 'quiet danger', onclick: onDelete }, 'Delete'));
 }
 
-/** Add a passage when `passage` is undefined, otherwise edit it. Reps are locked once added. */
+/** Add a passage when `passage` is undefined, otherwise edit it. */
 function PassageEditor({ passage, onSave, onCancel }) {
   const isEditing = Boolean(passage);
 
@@ -89,16 +90,17 @@ function PassageEditor({ passage, onSave, onCancel }) {
     el('input', { name: 'title', placeholder: 'Title, e.g. Psalm 23', required: true, value: passage?.title }),
     el('textarea', { name: 'text', rows: 6, placeholder: 'Paste the text you want to memorize…', required: true },
       passage?.text),
-    RepsPicker({ reps: passage?.reps ?? DEFAULT_REPS, isLocked: isEditing }),
-    isEditing && el('p', { class: 'note' }, "Reps can't be changed. Changing the text resets this passage's progress."),
+    RepsPicker({ reps: passage?.reps ?? DEFAULT_REPS }),
+    isEditing && el('p', { class: 'note' }, "Changing the text resets this passage's progress."),
     el('div', { class: 'row' },
       el('button', { type: 'submit', class: 'primary' }, isEditing ? 'Save changes' : 'Add passage'),
       isEditing && el('button', { type: 'button', onclick: onCancel }, 'Cancel')));
 }
 
-function RepsPicker({ reps, isLocked }) {
-  return el('label', { class: 'reps' }, 'Clean runs needed per step ',
-    el('select', { name: 'reps', disabled: isLocked },
+/** Inside the editor form it's read on submit; in Practice, `onChange` applies it right away. */
+function RepsPicker({ reps, onChange }) {
+  return el('label', { class: 'reps' }, 'Clean runs per step ',
+    el('select', { name: 'reps', onchange: onChange && ((event) => onChange(Number(event.target.value))) },
       REPS_OPTIONS.map((option) => el('option', { value: option, selected: option === reps }, option))));
 }
 
@@ -107,15 +109,20 @@ function Practice({ state, actions }) {
   const { progress, reps } = passage;
   const justCompletedStep = [RESULT.LEVEL_UP, RESULT.MASTERED].includes(state.lastResult);
 
-  return el('section', { class: 'practice', onclick: actions.focusKeyboard },
+  const refocusUnlessPicking = (event) => event.target.tagName !== 'SELECT' && actions.focusKeyboard();
+
+  return el('section', { class: 'practice', onclick: refocusUnlessPicking },
     el('div', { class: 'section-head' },
       el('h2', {}, passage.title),
       el('button', { type: 'button', onclick: actions.goToLibrary }, 'All passages')),
-    StepLadder({ progress, activeStep: state.run.step, onPick: actions.reviewStep }),
+    StepLadder({ progress, activeStep: state.run.step, onPick: actions.goToStep }),
     el('div', { class: 'meta' },
       StreakCount({ cleanRuns: justCompletedStep ? reps : progress.cleanRuns, reps }),
-      el('span', { class: 'muted' }, state.run.step.hint)),
-    el('div', { class: 'text-box' }, RunText({ run: state.run })),
+      el('span', { class: 'muted' }, state.listening ? 'Listening… say each word out loud.' : state.run.step.hint),
+      el('span', { class: 'row controls' },
+        RepsPicker({ reps, onChange: actions.setReps }),
+        MicButton({ isListening: state.listening, onToggle: actions.toggleListening }))),
+    el('div', { class: 'text-box' }, RunText({ run: state.run, heard: state.heard })),
     state.run.status === RUN.FINISHED && RunSummary({
       result: state.lastResult,
       run: state.run,
@@ -126,20 +133,29 @@ function Practice({ state, actions }) {
     el('p', { class: 'note' }, el('kbd', {}, 'esc'), ' back to your passages'));
 }
 
+/** Any step can be picked; only steps actually completed get a tick. */
 function StepLadder({ progress, activeStep, onPick }) {
-  const isLocked = !isMastered(progress);
+  return el('nav', { class: 'ladder', 'aria-label': 'Steps' },
+    STEPS.map((step, i) => el('button', {
+      type: 'button',
+      class: classes('rung', step === activeStep && 'active'),
+      onclick: () => onPick(i),
+    }, step.label, progress.completed.includes(i) && el('span', { class: 'tick', 'aria-label': 'completed' }, '✓'))));
+}
 
-  return el('nav', {
-    class: 'ladder',
-    'aria-label': 'Steps',
-    title: isLocked ? 'Steps unlock for review once the passage is memorized.' : 'Pick a step to review.',
-  },
-  STEPS.map((step, i) => el('button', {
+/** Shown even where speech isn't supported (Firefox), so people know the option exists. */
+function MicButton({ isListening, onToggle }) {
+  if (!isSpeechSupported) {
+    return el('span', { class: 'row' },
+      el('button', { type: 'button', class: 'mic', disabled: true }, 'speak'),
+      el('span', { class: 'note' }, 'needs Chrome, Edge or Safari'));
+  }
+  return el('button', {
     type: 'button',
-    class: classes('rung', step === activeStep && 'active'),
-    disabled: isLocked,
-    onclick: () => onPick(i),
-  }, step.label, i < progress.step && el('span', { class: 'tick', 'aria-label': 'completed' }, '✓'))));
+    class: classes('mic', isListening && 'listening'),
+    'aria-pressed': String(isListening),
+    onclick: onToggle,
+  }, isListening ? 'stop listening' : 'speak');
 }
 
 function StreakCount({ cleanRuns, reps }) {
@@ -174,7 +190,7 @@ function lookOf(run, index) {
   return isWholeWord ? LOOK.INVISIBLE : LOOK.BLANK;
 }
 
-function RunText({ run }) {
+function RunText({ run, heard }) {
   return el('p', { class: 'passage' },
     run.words.map((word, i) => {
       const look = lookOf(run, i);
@@ -185,7 +201,8 @@ function RunText({ run }) {
           word,
           look,
           typed: run.typed,
-          wrongLetter: run.wrongLetter,
+          wrongInput: run.wrongInput,
+          heard: i === run.cursor ? heard : '',
           isCurrent: i === run.cursor,
           justAnswered: i === run.lastAnswered,
         }),
@@ -194,14 +211,15 @@ function RunText({ run }) {
     }));
 }
 
-function Word({ word, look, typed, wrongLetter, isCurrent, justAnswered }) {
-  const content = {
-    [LOOK.TYPING]: [typed, wrongLetter && el('span', { class: 'wrong-letter' }, wrongLetter)],
+/** While speaking, `heard` previews the word the mic is still hearing in place of the usual content. */
+function Word({ word, look, typed, wrongInput, heard, isCurrent, justAnswered }) {
+  const content = heard || ({
+    [LOOK.TYPING]: [typed, wrongInput && el('span', { class: 'wrong-input' }, wrongInput)],
     [LOOK.BLANK]: '',
-  }[look] ?? word.text;
+  }[look] ?? word.text);
 
   return el('span', {
-    class: classes('word', look, isCurrent && 'current', justAnswered && 'reveal'),
+    class: classes('word', look, isCurrent && 'current', heard && 'hearing', justAnswered && 'reveal'),
     style: `--letters: ${word.text.length}`,
   }, content);
 }
@@ -225,7 +243,7 @@ const SUMMARY = {
     button: 'Next step',
   },
   [RESULT.MASTERED]: {
-    message: () => 'Memorized! You typed the whole thing from memory.',
+    message: () => 'Memorized! You recalled the whole thing from memory.',
     button: 'Done',
   },
 };

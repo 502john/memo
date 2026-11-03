@@ -1,18 +1,19 @@
 /**
  * state.js: the memorization rules, written as pure functions (no DOM, no storage).
  *
- * LADDER: saved per passage as progress = { step, cleanRuns }
- *   1 Outline → 2 Recall 50% → 2 Recall 75% → 2 Recall 100% → 3 Full → mastered
- *   `reps` (1–5) is chosen when the passage is added and never changes.
- *   A run with no misses adds 1 to cleanRuns. Reaching `reps` moves up one step.
- *   A run with any miss resets cleanRuns to 0. Mastered means step === STEPS.length.
- *   Steps can't be skipped. Once mastered, any step can be picked for review,
- *   and the passage stays mastered.
+ * LADDER: saved per passage as progress = { step, cleanRuns, completed }
+ *   1 Outline → 2 Recall 50% → 2 Recall 75% → 2 Recall 100% → 3 Full
+ *   A run with no misses adds 1 to cleanRuns. Reaching the passage's `reps` (1–5, changeable
+ *   any time) completes the step and moves up one. A run with any miss resets cleanRuns to 0.
+ *   You can jump to any step, but only steps in `completed` were earned.
+ *   Mastered means Full is in `completed`.
  *
  * RUN: one pass through the text, TYPING ──last word──► FINISHED
  *   FIRST_LETTER (modes 1–2): one key per word. A wrong key marks the word MISSED and moves on.
- *   WHOLE_WORD   (mode 3):    every letter. A wrong letter is held in `wrongLetter` and blocks
+ *   WHOLE_WORD   (mode 3):    every letter. A wrong letter is held in `wrongInput` and blocks
  *                             until the right one is typed. The word then counts as MISSED (`stumbled`).
+ *   Speaking answers a whole word at a time under the same rules: in modes 1–2 a misheard word
+ *   is MISSED and skipped; in mode 3 it's held in `wrongInput` until it's said right.
  *   Spaces and punctuation never need typing. Words with no letters ("—") fill in automatically.
  *   `cursor` is the word being answered. `lastAnswered` drives the reveal animation.
  *   Hidden words are reshuffled every run, so you can't learn the pattern instead of the text.
@@ -65,8 +66,18 @@ export const SAMPLE_PASSAGE = {
   ].join('\n'),
 };
 
+const LAST_STEP = STEPS.length - 1;
+
 export function createPassage(title, text, reps) {
-  return { id: crypto.randomUUID(), title, text, reps, progress: progressAt(0) };
+  return { id: crypto.randomUUID(), title, text, reps, progress: newProgress() };
+}
+
+/** Saves from before skipping existed: every step below `step` was earned, and step past the end meant mastered. */
+export function upgradePassage(passage) {
+  const { progress } = passage;
+  if (progress.completed) return passage;
+  const completed = Array.from({ length: progress.step }, (_, i) => i);
+  return { ...passage, progress: { ...progress, step: Math.min(progress.step, LAST_STEP), completed } };
 }
 
 export function replacePassage(passages, passage) {
@@ -79,17 +90,20 @@ export function mergePassages(existing, imported) {
   return [...existing.filter((passage) => !importedIds.has(passage.id)), ...imported];
 }
 
-export function progressAt(step) {
-  return { step, cleanRuns: 0 };
+export function newProgress() {
+  return { step: 0, cleanRuns: 0, completed: [] };
+}
+
+export function moveToStep(progress, step) {
+  return { ...progress, step, cleanRuns: 0 };
 }
 
 export function isMastered(progress) {
-  return progress.step >= STEPS.length;
+  return progress.completed.includes(LAST_STEP);
 }
 
-/** Once mastered, you keep practising the last step. */
 export function currentStep(progress) {
-  return STEPS[Math.min(progress.step, STEPS.length - 1)];
+  return STEPS[progress.step];
 }
 
 /** The letters to type: "Shepherd;" → "shepherd", "Café" → "cafe", "—" → "". */
@@ -128,7 +142,7 @@ export function startRun(text, step) {
     words: words.map((word, i) => ({ ...word, hidden: hidden.has(i), result: WORD.PENDING })),
     cursor: 0,
     typed: '',
-    wrongLetter: '',
+    wrongInput: '',
     stumbled: false,
     misses: 0,
     lastAnswered: null,
@@ -144,16 +158,27 @@ export function typeKey(run, char) {
   const target = run.words[run.cursor].key;
   if (run.step.input === INPUT.FIRST_LETTER) return answerWord(run, letter === target[0]);
 
-  if (letter !== target[run.typed.length]) return { ...run, wrongLetter: letter, stumbled: true };
+  if (letter !== target[run.typed.length]) return { ...run, wrongInput: letter, stumbled: true };
 
   const typed = run.typed + letter;
   if (typed === target) return answerWord(run, !run.stumbled);
-  return { ...run, typed, wrongLetter: '' };
+  return { ...run, typed, wrongInput: '' };
+}
+
+export function sayWord(run, spoken) {
+  if (run.status !== RUN.TYPING) return run;
+
+  const heard = toKey(spoken);
+  if (!heard) return run;
+
+  const isCorrect = heard === run.words[run.cursor].key;
+  if (isCorrect || run.step.input === INPUT.FIRST_LETTER) return answerWord(run, isCorrect && !run.stumbled);
+  return { ...run, wrongInput: heard, stumbled: true };
 }
 
 export function scoreRun(progress, run, reps) {
   if (run.misses > 0) {
-    return { result: RESULT.FAILED, progress: progressAt(progress.step) };
+    return { result: RESULT.FAILED, progress: { ...progress, cleanRuns: 0 } };
   }
 
   const cleanRuns = progress.cleanRuns + 1;
@@ -161,8 +186,11 @@ export function scoreRun(progress, run, reps) {
     return { result: RESULT.CLEAN, progress: { ...progress, cleanRuns } };
   }
 
-  const next = progressAt(Math.min(progress.step + 1, STEPS.length));
-  return { result: isMastered(next) ? RESULT.MASTERED : RESULT.LEVEL_UP, progress: next };
+  const completed = [...new Set([...progress.completed, progress.step])];
+  if (progress.step === LAST_STEP) {
+    return { result: RESULT.MASTERED, progress: { ...progress, cleanRuns: 0, completed } };
+  }
+  return { result: RESULT.LEVEL_UP, progress: { step: progress.step + 1, cleanRuns: 0, completed } };
 }
 
 function answerWord(run, isCorrect) {
@@ -171,7 +199,7 @@ function answerWord(run, isCorrect) {
     words: withResult(run.words, run.cursor, isCorrect ? WORD.CORRECT : WORD.MISSED),
     cursor: run.cursor + 1,
     typed: '',
-    wrongLetter: '',
+    wrongInput: '',
     stumbled: false,
     misses: run.misses + (isCorrect ? 0 : 1),
     lastAnswered: run.cursor,

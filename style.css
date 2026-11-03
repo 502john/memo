@@ -171,7 +171,6 @@ kbd {
 
 .rung { padding: 4px 10px; background: none; color: var(--sub); font-size: 0.85rem; }
 .rung:hover { background: none; color: var(--text); }
-.rung:disabled { pointer-events: none; }
 .rung.active { color: var(--main); }
 
 .tick { margin-left: 6px; color: var(--main); }
@@ -189,6 +188,17 @@ kbd {
 
 .reps { display: inline-flex; align-items: center; gap: 8px; color: var(--sub); font-size: 0.85rem; }
 .reps select { padding: 4px 8px; }
+
+.controls { margin-left: auto; }
+
+.mic { padding: 4px 12px; font-size: 0.85rem; }
+.mic.listening { color: var(--bg); background: var(--main); animation: pulse 1.4s ease-in-out infinite; }
+.mic:disabled { cursor: not-allowed; opacity: 0.5; }
+.mic:disabled:hover { background: var(--sub-alt); color: var(--text); }
+
+@keyframes pulse {
+  50% { opacity: 0.6; }
+}
 
 .text-box { cursor: text; }
 
@@ -215,7 +225,7 @@ kbd {
 .word { color: var(--sub); }
 .word.correct { color: var(--text); }
 
-.word.missed, .wrong-letter { color: var(--error); }
+.word.missed, .wrong-input { color: var(--error); }
 
 .word.blank {
   display: inline-block;
@@ -238,6 +248,9 @@ kbd {
 /* The word you're on: a caret in front of it, like Monkeytype's. It holds steady while you type and blinks once you pause. */
 .word.current { box-shadow: inset 2px 0 0 var(--main); padding-left: 3px; animation: caret-blink 1s ease-in-out 0.5s infinite; }
 .word.blank.current { border-bottom-color: var(--main); }
+
+.word.hearing { color: var(--text); opacity: 0.6; }
+.word.blank.hearing { width: auto; }
 
 /* A word you just answered appears letter by letter. */
 .word.reveal { animation: write-out calc(var(--letters) * 30ms) steps(var(--letters)) both; }
@@ -282,4 +295,5 @@ kbd {
 @media (prefers-reduced-motion: reduce) {
   .word.reveal, .word.typing::after, .word.current { animation: none; }
   .confetti { display: none; }
+  .mic.listening { animation: none; }
 }
