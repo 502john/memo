@@ -11,8 +11,8 @@
  *   │   └── PassageEditor → RepsPicker
  *   ├── ReadAloud
  *   └── Practice
- *       ├── StepLadder
- *       ├── StreakCount, RepsPicker, MicButton
+ *       ├── settings bar: StepLadder, RepsPicker, MicButton
+ *       ├── StreakCount
  *       ├── RunText → Word (one per word)
  *       └── RunSummary
  */
@@ -129,9 +129,12 @@ function PassageEditor({ passage, onSave, onCancel }) {
       isEditing && el('button', { type: 'button', onclick: onCancel }, 'Cancel')));
 }
 
-/** Inside the editor form it's read on submit; in Practice, `onChange` applies it right away. */
-function RepsPicker({ reps, onChange }) {
-  return el('label', { class: 'reps' }, 'Clean runs per step ',
+/**
+ * Inside the editor form it's read on submit; in Practice's settings bar, `onChange`
+ * applies it right away and the shorter `label` keeps the bar on one line.
+ */
+function RepsPicker({ reps, onChange, label = 'Clean runs per step' }) {
+  return el('label', { class: 'reps', title: 'Clean runs in a row needed to finish a step' }, `${label} `,
     el('select', { name: 'reps', onchange: onChange && ((event) => onChange(Number(event.target.value))) },
       REPS_OPTIONS.map((option) => el('option', { value: option, selected: option === reps }, option))));
 }
@@ -148,7 +151,7 @@ function ReadAloud({ state, actions }) {
     el('div', { class: 'section-head' },
       el('h2', {}, passage.title),
       el('button', { type: 'button', onclick: actions.goToLibrary }, 'All passages')),
-    el('nav', { class: 'ladder', 'aria-label': 'Read aloud steps' },
+    el('nav', { class: 'bar ladder', 'aria-label': 'Read aloud steps' },
       READ_VIEWS.map((step, i) => el('button', {
         type: 'button',
         class: classes('rung', i === state.readStep && 'active'),
@@ -182,13 +185,14 @@ function Practice({ state, actions }) {
     el('div', { class: 'section-head' },
       el('h2', {}, passage.title),
       el('button', { type: 'button', onclick: actions.goToLibrary }, 'All passages')),
-    StepLadder({ progress, activeStep: state.run.step, onPick: actions.goToStep }),
+    el('div', { class: 'bar' },
+      StepLadder({ progress, activeStep: state.run.step, onPick: actions.goToStep }),
+      el('span', { class: 'bar-divider', 'aria-hidden': 'true' }),
+      RepsPicker({ reps, onChange: actions.setReps, label: 'reps' }),
+      MicButton({ isListening: state.listening, onToggle: actions.toggleListening })),
     el('div', { class: 'meta' },
       StreakCount({ cleanRuns: justCompletedStep ? reps : progress.cleanRuns, reps }),
-      el('span', { class: 'muted' }, state.listening ? 'Listening… say each word. Chrome sends the audio to Google to transcribe it.' : state.run.step.hint),
-      el('span', { class: 'row controls' },
-        RepsPicker({ reps, onChange: actions.setReps }),
-        MicButton({ isListening: state.listening, onToggle: actions.toggleListening }))),
+      el('span', { class: 'muted' }, state.listening ? ListeningHint({ onDevice: state.speechOnDevice }) : state.run.step.hint)),
     el('div', { class: 'text-box' }, RunText({ run: state.run, heard: state.heard })),
     state.run.status === RUN.FINISHED && RunSummary({
       result: state.lastResult,
@@ -197,7 +201,8 @@ function Practice({ state, actions }) {
       reps,
       onContinue: actions.continueAfterRun,
     }),
-    el('p', { class: 'note' }, el('kbd', {}, 'esc'), ' back to your passages'));
+    el('p', { class: 'note' }, el('kbd', {}, 'esc'), ' back to your passages',
+      !isSpeechSupported && '. Speaking needs Chrome, Edge or Safari.'));
 }
 
 /** Any step can be picked; only steps actually completed get a tick. */
@@ -210,12 +215,13 @@ function StepLadder({ progress, activeStep, onPick }) {
     }, step.label, progress.completed.includes(i) && el('span', { class: 'tick', 'aria-label': 'completed' }, '✓'))));
 }
 
-/** Shown even where speech isn't supported (Firefox), so people know the option exists. */
+/**
+ * Shown even where speech isn't supported (Firefox), disabled, so people know the
+ * option exists; Practice's footer note says which browsers support it.
+ */
 function MicButton({ isListening, onToggle }) {
   if (!isSpeechSupported) {
-    return el('span', { class: 'row' },
-      el('button', { type: 'button', class: 'mic', disabled: true }, 'speak'),
-      el('span', { class: 'note' }, 'needs Chrome, Edge or Safari'));
+    return el('button', { type: 'button', class: 'mic', disabled: true, title: 'Needs Chrome, Edge or Safari' }, 'speak');
   }
   return el('button', {
     type: 'button',
@@ -223,6 +229,12 @@ function MicButton({ isListening, onToggle }) {
     'aria-pressed': String(isListening),
     onclick: onToggle,
   }, isListening ? 'stop listening' : 'speak');
+}
+
+function ListeningHint({ onDevice }) {
+  return onDevice
+    ? 'Listening… say each word. Speech is transcribed on this device.'
+    : "Listening… say each word. Your browser sends the audio to its speech service (Google, in Chrome) to transcribe it.";
 }
 
 function StreakCount({ cleanRuns, reps }) {

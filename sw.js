@@ -5,7 +5,7 @@
  * visit after it's published. Bump CACHE whenever FILES changes.
  */
 
-const CACHE = 'memo-v1';
+const CACHE = 'memo-v2';
 
 const FILES = [
   './',
@@ -17,6 +17,7 @@ const FILES = [
   'src/app.js',
   'src/components.js',
   'src/dom.js',
+  'src/match.js',
   'src/speech.js',
   'src/state.js',
   'src/storage.js',

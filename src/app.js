@@ -16,6 +16,7 @@
  *   lastResult  RESULT of the run that just finished
  *   listening   whether the mic is answering instead of the keyboard (see speech.js)
  *   heard       the word the mic is still hearing, previewed in the current word's slot
+ *   speechOnDevice  whether speech is transcribed on this device rather than online
  *   fullscreen  true or false, or null where the browser can't go fullscreen (iPhone Safari)
  *
  * Typing goes into a hidden <input> (index.html) rather than a keydown
@@ -34,7 +35,7 @@ import { startListening, stopListening } from './speech.js';
 import {
   VIEW, RUN, RESULT, DEFAULT_REPS, SAMPLE_PASSAGE, READ_VIEWS, THEMES,
   restoreSettings, createPassage, restorePassages, replacePassage, mergePassages, newProgress, moveToStep, currentStep,
-  startRun, typeKey, sayWord, scoreRun,
+  startRun, typeKey, sayWord, isNextWord, scoreRun,
 } from './state.js';
 
 const root = document.getElementById('app');
@@ -54,6 +55,7 @@ let state = {
   lastResult: null,
   listening: false,
   heard: '',
+  speechOnDevice: false,
   fullscreen: document.fullscreenEnabled ? false : null,
 };
 
@@ -165,6 +167,8 @@ const actions = {
     startListening({
       onWords: actions.sayWords,
       onHearing: (heard) => heard !== state.heard && setState({ heard }),
+      isExpected: (word) => isNextWord(state.run, word),
+      onDevice: (speechOnDevice) => setState({ speechOnDevice }),
       onBlocked: () => {
         setState({ listening: false });
         alert("Microphone access is blocked. Allow it in your browser's site settings to answer out loud.");

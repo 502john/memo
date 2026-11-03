@@ -14,7 +14,7 @@ Each passage climbs a ladder. Each step needs a number of clean runs in a row (1
 
 In modes 1–2 a wrong key marks the word as missed and moves on. In mode 3 a wrong letter stays red until you type the right one. Case, spaces and punctuation never matter.
 
-**Speak instead of type:** press **speak** and say each word. The same rules apply: in modes 1–2 a misheard word is a miss, and in mode 3 it stays red until you say it right. This uses the browser's built-in speech recognition (Chrome, Edge, Safari; not Firefox). Chrome sends the audio to Google to transcribe it.
+**Speak instead of type:** press **speak** and say each word. Speech recognizers often mishear right answers, so speaking is forgiving: sound-alikes ("two" for "to"), numbers ("23" / "twenty three"), near spellings, words heard in pieces ("a costa" for "Acosta") and dropped small words all count (see `src/match.js`). A word that's really wrong is still a miss. This uses the browser's built-in speech recognition (Chrome, Edge, Safari; not Firefox); see Privacy for where the audio goes.
 
 **Read aloud first:** before testing yourself, use **Read aloud** on a passage as a warm-up. Say it out loud while the screen shows less each time: the full text, then each word's first letter, then only the first word of each line. Nothing is checked. Move on with **Next**, `ctrl/cmd + enter` or `→`.
 
@@ -43,6 +43,7 @@ GitHub → **Settings → Pages → Deploy from a branch → `main` / root**. Ev
 | `src/state.js` | The rules: ladder, runs, scoring. Pure functions, no DOM. |
 | `src/components.js` | UI as function components: `props → DOM element`. |
 | `src/app.js` | The single `state` object, the actions that change it, and `render`. |
+| `src/match.js` | Whether a spoken word counts as the word on the page. |
 | `src/speech.js` | Speech input through the browser's Web Speech API. |
 | `sw.js` | Service worker that caches the app so it works offline. |
 | `src/storage.js` | localStorage, plus export and import of backups. |
@@ -50,7 +51,7 @@ GitHub → **Settings → Pages → Deploy from a branch → `main` / root**. Ev
 
 ## Privacy
 
-Memo has no server and collects nothing. Passages and progress are stored in your browser's localStorage, and the font is served from this site, so a visit makes no third-party requests. The one exception is **speak**: your browser's speech recognition handles the audio, and in Chrome that means it's sent to Google to be transcribed.
+Memo has no server and collects nothing. Passages and progress are stored in your browser's localStorage, and the font is served from this site, so a visit makes no third-party requests. The one exception is **speak**: your browser's speech recognition handles the audio. Where the browser can transcribe on the device (recent Chrome, after a one-time language download it starts in the background) the audio never leaves your computer; otherwise it's sent to the browser's speech service, which is Google in Chrome. The page says which one is in use while it's listening.
 
 ## Credits
 
