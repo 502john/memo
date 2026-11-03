@@ -182,11 +182,13 @@ kbd {
 
 /* Practice: the step bar, the streak counter, then the words */
 
-.ladder {
+/* The settings bar: one rounded strip of steps, then a divider, then reps and speak. */
+.bar {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
-  gap: 2px 4px;
+  gap: 4px 10px;
   width: fit-content;
   max-width: 100%;
   margin: 0 auto 32px;
@@ -194,6 +196,13 @@ kbd {
   border-radius: 8px;
   background: var(--sub-alt);
 }
+.bar-divider { width: 3px; height: 1.2em; border-radius: 2px; background: var(--bg); }
+
+@media (max-width: 640px) {
+  .bar-divider { display: none; }
+}
+
+.ladder { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 4px; }
 
 .rung { padding: 4px 10px; background: none; color: var(--sub); font-size: 0.85rem; }
 .rung:hover { background: none; color: var(--text); }
@@ -214,10 +223,10 @@ kbd {
 
 .reps { display: inline-flex; align-items: center; gap: 8px; color: var(--sub); font-size: 0.85rem; }
 .reps select { padding: 4px 8px; }
+.bar .reps select { background: var(--bg); }
 
-.controls { margin-left: auto; }
-
-.mic { padding: 4px 12px; font-size: 0.85rem; }
+.mic { padding: 4px 10px; font-size: 0.85rem; background: none; color: var(--sub); }
+.mic:hover { background: none; color: var(--text); }
 .mic.listening { color: var(--bg); background: var(--main); animation: pulse 1.4s ease-in-out infinite; }
 
 @keyframes pulse {

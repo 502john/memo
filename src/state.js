@@ -248,6 +248,11 @@ export function typeKey(run, char) {
   return { ...run, typed, wrongInput: '' };
 }
 
+/** Speech uses this to accept a word the moment it's heard, before the recognizer settles on it. */
+export function isNextWord(run, spoken) {
+  return run.status === RUN.TYPING && toKey(spoken) === run.words[run.cursor].key;
+}
+
 export function sayWord(run, spoken) {
   if (run.status !== RUN.TYPING) return run;
 

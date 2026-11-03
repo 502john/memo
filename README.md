@@ -14,7 +14,7 @@ Each passage climbs a ladder. Each step needs a number of clean runs in a row (1
 
 In modes 1–2 a wrong key marks the word as missed and moves on. In mode 3 a wrong letter stays red until you type the right one. Case, spaces and punctuation never matter.
 
-**Speak instead of type:** press **speak** and say each word. The same rules apply: in modes 1–2 a misheard word is a miss, and in mode 3 it stays red until you say it right. This uses the browser's built-in speech recognition (Chrome, Edge, Safari; not Firefox). Chrome sends the audio to Google to transcribe it.
+**Speak instead of type:** press **speak** and say each word. The same rules apply: in modes 1–2 a misheard word is a miss, and in mode 3 it stays red until you say it right. This uses the browser's built-in speech recognition (Chrome, Edge, Safari; not Firefox); see Privacy for where the audio goes.
 
 **Read aloud first:** before testing yourself, use **Read aloud** on a passage as a warm-up. Say it out loud while the screen shows less each time: the full text, then each word's first letter, then only the first word of each line. Nothing is checked. Move on with **Next**, `ctrl/cmd + enter` or `→`.
 
@@ -50,7 +50,7 @@ GitHub → **Settings → Pages → Deploy from a branch → `main` / root**. Ev
 
 ## Privacy
 
-Memo has no server and collects nothing. Passages and progress are stored in your browser's localStorage, and the font is served from this site, so a visit makes no third-party requests. The one exception is **speak**: your browser's speech recognition handles the audio, and in Chrome that means it's sent to Google to be transcribed.
+Memo has no server and collects nothing. Passages and progress are stored in your browser's localStorage, and the font is served from this site, so a visit makes no third-party requests. The one exception is **speak**: your browser's speech recognition handles the audio. Where the browser can transcribe on the device (recent Chrome, after a one-time language download it starts in the background) the audio never leaves your computer; otherwise it's sent to the browser's speech service, which is Google in Chrome. The page says which one is in use while it's listening.
 
 ## Credits
 
