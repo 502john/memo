@@ -12,8 +12,15 @@
  *   FIRST_LETTER (modes 1–2): one key per word. A wrong key marks the word MISSED and moves on.
  *   WHOLE_WORD   (mode 3):    every letter. A wrong letter is held in `wrongInput` and blocks
  *                             until the right one is typed. The word then counts as MISSED (`stumbled`).
- *   Speaking answers a whole word at a time under the same rules: in modes 1–2 a misheard word
- *   is MISSED and skipped; in mode 3 it's held in `wrongInput` until it's said right.
+ *   Speaking answers a whole word at a time, with an allowance for recognizer mistakes
+ *   (see match.js): sound-alikes, numbers and near spellings count. A word heard in pieces
+ *   ("a costa") is collected in `heardSoFar` until it's whole, one heard word can cover
+ *   several ("400" for "four hundred"), and filler sounds are ignored. If what's heard (or
+ *   what was being held as a piece) is the next word, the current one was skipped: a short
+ *   one ("a", "the") was probably just dropped by the recognizer and counts as right, a
+ *   longer one is MISSED. Anything else
+ *   that doesn't match is MISSED and skipped in modes 1–2, and in mode 3 it's held in
+ *   `wrongInput` until it's said right.
  *   Spaces and punctuation never need typing. Words with no letters ("—") fill in automatically.
  *   `cursor` is the word being answered. `lastAnswered` drives the reveal animation.
  *   Hidden words are reshuffled every run, so you can't learn the pattern instead of the text.
@@ -26,6 +33,8 @@
  * SETTINGS: saved per device, not in backups. `textSize` scales the passage text, and
  *   `theme` is light, dark, or follows the system.
  */
+
+import { soundsLike, couldContinue, isFiller } from './match.js';
 
 export const VIEW = { LIBRARY: 'library', PRACTICE: 'practice', READ: 'read' };
 
@@ -227,6 +236,7 @@ export function startRun(text, step) {
     typed: '',
     wrongInput: '',
     stumbled: false,
+    heardSoFar: '',
     misses: 0,
     lastAnswered: null,
   });
@@ -250,18 +260,51 @@ export function typeKey(run, char) {
 
 /** Speech uses this to accept a word the moment it's heard, before the recognizer settles on it. */
 export function isNextWord(run, spoken) {
-  return run.status === RUN.TYPING && toKey(spoken) === run.words[run.cursor].key;
+  return run.status === RUN.TYPING && matchesCurrentWord(run, toKey(spoken));
 }
 
 export function sayWord(run, spoken) {
   if (run.status !== RUN.TYPING) return run;
 
-  const heard = toKey(spoken);
-  if (!heard) return run;
+  const piece = toKey(spoken);
+  const target = run.words[run.cursor].key;
+  if (!piece || (isFiller(piece) && piece !== target)) return run;
 
-  const isCorrect = heard === run.words[run.cursor].key;
-  if (isCorrect || run.step.input === INPUT.FIRST_LETTER) return answerWord(run, isCorrect && !run.stumbled);
-  return { ...run, wrongInput: heard, stumbled: true };
+  if (matchesCurrentWord(run, piece)) return answerWord(run, !run.stumbled);
+
+  const covered = wordsCovered(run, piece);
+  if (covered) return Array.from({ length: covered }).reduce((answered) => answerWord(answered, true), run);
+
+  if (couldContinue(run.heardSoFar + piece, target)) return { ...run, heardSoFar: run.heardSoFar + piece };
+  if (couldContinue(piece, target)) return { ...run, heardSoFar: piece };
+
+  const nextWord = run.words.slice(run.cursor + 1).find((word) => word.key);
+  if (nextWord && run.heardSoFar && soundsLike(run.heardSoFar, nextWord.key)) {
+    return sayWord(sayWord(skipCurrentWord(run), run.heardSoFar), spoken);
+  }
+  if (nextWord && soundsLike(piece, nextWord.key)) return sayWord(skipCurrentWord(run), spoken);
+
+  if (run.step.input === INPUT.FIRST_LETTER) return answerWord(run, false);
+  return { ...run, wrongInput: piece, stumbled: true, heardSoFar: '' };
+}
+
+function skipCurrentWord(run) {
+  const droppedByRecognizer = run.words[run.cursor].key.length <= 3 && !run.stumbled;
+  return answerWord(run, droppedByRecognizer);
+}
+
+/** How many upcoming words (2 or 3) one heard word stands for, or 0. */
+function wordsCovered(run, piece) {
+  const keys = run.words.slice(run.cursor).filter((word) => word.key).slice(0, 3).map((word) => word.key);
+  for (let count = 2; count <= keys.length; count++) {
+    if (soundsLike(piece, keys.slice(0, count).join(''))) return count;
+  }
+  return 0;
+}
+
+function matchesCurrentWord(run, piece) {
+  const target = run.words[run.cursor].key;
+  return soundsLike(run.heardSoFar + piece, target) || soundsLike(piece, target);
 }
 
 export function scoreRun(progress, run, reps) {
@@ -289,6 +332,7 @@ function answerWord(run, isCorrect) {
     typed: '',
     wrongInput: '',
     stumbled: false,
+    heardSoFar: '',
     misses: run.misses + (isCorrect ? 0 : 1),
     lastAnswered: run.cursor,
   });
