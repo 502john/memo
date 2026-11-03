@@ -13,6 +13,7 @@
  *   run         the current pass through the text (see state.js)
  *   lastResult  RESULT of the run that just finished
  *   listening   whether the mic is answering instead of the keyboard (see speech.js)
+ *   heard       the word the mic is still hearing, previewed in the current word's slot
  *
  * Typing goes into a hidden <input> (index.html) rather than a keydown
  * listener, because only a focused input opens the on-screen keyboard on phones.
@@ -40,6 +41,7 @@ let state = {
   run: null,
   lastResult: null,
   listening: false,
+  heard: '',
 };
 
 function setState(changes) {
@@ -103,7 +105,7 @@ const actions = {
 
   goToLibrary() {
     stopListening();
-    setState({ view: VIEW.LIBRARY, activeId: null, run: null, lastResult: null, listening: false });
+    setState({ view: VIEW.LIBRARY, activeId: null, run: null, lastResult: null, listening: false, heard: '' });
   },
 
   pressKey(char) {
@@ -135,11 +137,12 @@ const actions = {
   toggleListening() {
     if (state.listening) {
       stopListening();
-      setState({ listening: false });
+      setState({ listening: false, heard: '' });
       return;
     }
     startListening({
       onWords: actions.sayWords,
+      onHearing: (heard) => heard !== state.heard && setState({ heard }),
       onBlocked: () => {
         setState({ listening: false });
         alert("Microphone access is blocked. Allow it in your browser's site settings to answer out loud.");

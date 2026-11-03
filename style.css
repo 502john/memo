@@ -249,6 +249,9 @@ kbd {
 .word.current { box-shadow: inset 2px 0 0 var(--main); padding-left: 3px; animation: caret-blink 1s ease-in-out 0.5s infinite; }
 .word.blank.current { border-bottom-color: var(--main); }
 
+.word.hearing { color: var(--text); opacity: 0.6; }
+.word.blank.hearing { width: auto; }
+
 /* A word you just answered appears letter by letter. */
 .word.reveal { animation: write-out calc(var(--letters) * 30ms) steps(var(--letters)) both; }
 

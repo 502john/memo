@@ -122,7 +122,7 @@ function Practice({ state, actions }) {
       el('span', { class: 'row controls' },
         RepsPicker({ reps, onChange: actions.setReps }),
         MicButton({ isListening: state.listening, onToggle: actions.toggleListening }))),
-    el('div', { class: 'text-box' }, RunText({ run: state.run })),
+    el('div', { class: 'text-box' }, RunText({ run: state.run, heard: state.heard })),
     state.run.status === RUN.FINISHED && RunSummary({
       result: state.lastResult,
       run: state.run,
@@ -190,7 +190,7 @@ function lookOf(run, index) {
   return isWholeWord ? LOOK.INVISIBLE : LOOK.BLANK;
 }
 
-function RunText({ run }) {
+function RunText({ run, heard }) {
   return el('p', { class: 'passage' },
     run.words.map((word, i) => {
       const look = lookOf(run, i);
@@ -202,6 +202,7 @@ function RunText({ run }) {
           look,
           typed: run.typed,
           wrongInput: run.wrongInput,
+          heard: i === run.cursor ? heard : '',
           isCurrent: i === run.cursor,
           justAnswered: i === run.lastAnswered,
         }),
@@ -210,14 +211,15 @@ function RunText({ run }) {
     }));
 }
 
-function Word({ word, look, typed, wrongInput, isCurrent, justAnswered }) {
-  const content = {
+/** While speaking, `heard` previews the word the mic is still hearing in place of the usual content. */
+function Word({ word, look, typed, wrongInput, heard, isCurrent, justAnswered }) {
+  const content = heard || ({
     [LOOK.TYPING]: [typed, wrongInput && el('span', { class: 'wrong-input' }, wrongInput)],
     [LOOK.BLANK]: '',
-  }[look] ?? word.text;
+  }[look] ?? word.text);
 
   return el('span', {
-    class: classes('word', look, isCurrent && 'current', justAnswered && 'reveal'),
+    class: classes('word', look, isCurrent && 'current', heard && 'hearing', justAnswered && 'reveal'),
     style: `--letters: ${word.text.length}`,
   }, content);
 }
