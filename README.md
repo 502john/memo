@@ -1,64 +1,68 @@
-# Memo
+# memo
 
-Memorize any text by typing it. No account, no server: everything stays in your browser.
+Memorize a speech, a poem or an interview answer by typing it, or saying it, with fewer and fewer hints.
+
+**[Open memo](https://502john.github.io/memo/)**: free, no account, works offline.
+
+![Typing the first letter of each word fills in the hidden words](docs/demo.gif)
 
 ## How it works
 
-Each passage climbs a ladder. Each step needs a number of clean runs in a row (1–5, default 3), which you can change any time. Any miss means the run doesn't count. You can jump to any step. Only steps you actually complete get a ✓, and finishing Full marks the passage memorized.
+1. **Add your text.** Paste anything, keeping its line breaks.
+2. **Read it aloud (optional warm-up).** The screen shows the full text, then only first letters, then only the first word of each line.
+3. **Practice.** Climb five steps, each with fewer hints:
 
-| Mode | Step | What you see | What you type |
-| --- | --- | --- | --- |
-| 1 | Outline | every word | first letter of each word |
-| 2 | Recall 50% → 75% → 100% | fewer and fewer words | first letter of each word |
-| 3 | Full | nothing | every word in full |
+| Step | You see | You type |
+| --- | --- | --- |
+| Outline | every word | the first letter of each word |
+| Recall 50% / 75% / 100% | fewer and fewer words | the first letter of each word |
+| Full | nothing | every word |
 
-In modes 1–2 a wrong key marks the word as missed and moves on. In mode 3 a wrong letter stays red until you type the right one. Case, spaces and punctuation never matter.
+Each step needs a few clean runs in a row (3 by default, 1–5). A miss means the run doesn't count. Finish Full and the passage is memorized.
 
-**Speak instead of type:** press **speak** and say each word. Speech recognizers mishear a lot, so a spoken word counts when it **starts with the same sound** as the word on the page ("Kirk" for "killed", "kat" for "cat", "right" for "write"). That's a deliberate tradeoff: a wrong word with the same start also passes. Saying the next word marks a skipped one as missed (see `src/match.js`). Typing stays exact. This uses the browser's built-in speech recognition (Chrome, Edge, Safari; not Firefox); see Privacy for where the audio goes.
+## Features
 
-**Read aloud first:** before testing yourself, use **Read aloud** on a passage as a warm-up. Say it out loud while the screen shows less each time: the full text, then each word's first letter, then only the first word of each line. Nothing is checked. Move on with **Next**, `ctrl/cmd + enter` or `→`.
+- **Type or speak.** Press **speak** and say each word. Recognizers mishear, so a spoken word counts if it starts with the same sound. Typing stays exact.
+- **Private.** No server, no tracking. Your passages stay in your browser. Export them to back up or switch devices.
+- **Works offline** after the first visit, and installs like an app.
+- **Your setup:** three text sizes, light/dark theme, fullscreen (`f`).
 
-**Also:**
-- Word count and speaking time for each passage.
-- Three text sizes, a light/dark/system theme switch, and fullscreen (`f`).
-- Works offline after the first visit, and can be installed as an app.
+## Run it yourself
 
-## Run locally
-
-The app uses ES modules, so it needs a local server. Opening the file directly won't work.
+No build step. Clone it and serve the folder:
 
 ```sh
 python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
-## Deploy (free)
+To host your own copy for free, enable GitHub Pages on the repo. Every push to `main` goes live.
 
-GitHub → **Settings → Pages → Deploy from a branch → `main` / root**. Every push to `main` goes live.
+## Code
 
-## Code map
+Plain HTML, CSS and JavaScript modules, with no dependencies.
 
-| File | Role |
+| File | What it does |
 | --- | --- |
-| `src/state.js` | The rules: ladder, runs, scoring. Pure functions, no DOM. |
-| `src/components.js` | UI as function components: `props → DOM element`. |
-| `src/app.js` | The single `state` object, the actions that change it, and `render`. |
-| `src/match.js` | Whether a spoken word counts: same first letter or first sound. |
-| `src/speech.js` | Speech input through the browser's Web Speech API. |
-| `sw.js` | Service worker that caches the app so it works offline. |
-| `src/storage.js` | localStorage, plus export and import of backups. |
-| `src/dom.js` | `el()`, the helper every component is built with. |
+| `src/state.js` | The rules: steps, runs, scoring. Pure functions. |
+| `src/components.js` | The UI, as small functions that return DOM elements. |
+| `src/app.js` | The app's one `state` object, the actions that change it, and rendering. |
+| `src/match.js` | Whether a spoken word counts. |
+| `src/speech.js` | Speech input via the browser's Web Speech API. |
+| `src/storage.js` | Saving, export and import. |
+| `src/dom.js` | `el()`, the helper every component uses. |
+| `sw.js` | Offline caching. |
 
 ## Privacy
 
-Memo has no server and collects nothing. Passages and progress are stored in your browser's localStorage, and the font is served from this site, so a visit makes no third-party requests. The one exception is **speak**: your browser's speech recognition handles the audio. Where the browser can transcribe on the device (recent Chrome, after a one-time language download it starts in the background) the audio never leaves your computer; otherwise it's sent to the browser's speech service, which is Google in Chrome. The page says which one is in use while it's listening.
+Memo collects nothing and makes no third-party requests. The one exception is **speak**. Recent Chrome transcribes on your device, so the audio stays on your computer. Other browsers, or Chrome before its language download finishes, send the audio to the browser's speech service (Google, in Chrome). The page shows which one is in use.
 
 ## Credits
 
-- The look follows [Monkeytype](https://github.com/monkeytypegame/monkeytype)'s "serika" themes. Only colours and layout ideas are borrowed, no code.
-- [Roboto Mono](https://github.com/googlefonts/robotomono) is used under the SIL Open Font License (`fonts/OFL.txt`).
-- The sample passage is Psalm 23 from the King James Version, which is public domain in the US.
+- Look inspired by [Monkeytype](https://github.com/monkeytypegame/monkeytype)'s "serika" theme (colors and layout only).
+- [Roboto Mono](https://github.com/googlefonts/robotomono), under the SIL Open Font License (`fonts/OFL.txt`).
+- Sample text: the opening of "Jabberwocky" by Lewis Carroll (1871), public domain.
 
 ## License
 
-MIT
+[MIT](LICENSE)

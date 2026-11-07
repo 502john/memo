@@ -7,7 +7,7 @@
  *
  * First sounds treat letters that sound alike as equal: hard c, k and q ("cat" / "kat"),
  * soft c and s ("cent" / "sent"), soft g and j ("gem" / "jem"), ph and f, x and z, and
- * silent starts ("knee" / "nee", "write" / "right", "psalm" / "salm"). Digits are compared
+ * silent starts ("knee" / "nee", "write" / "right", "pseudo" / "sudo"). Digits are compared
  * as the words they're said as ("4" starts like "four").
  */
 
