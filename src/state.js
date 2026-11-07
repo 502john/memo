@@ -95,13 +95,17 @@ export const DEFAULT_SETTINGS = { textSize: 'medium', theme: 'system' };
 const SPEAKING_WORDS_PER_MINUTE = 130;
 
 export const SAMPLE_PASSAGE = {
-  title: 'Psalm 23 (opening)',
+  title: 'Jabberwocky (opening)',
   text: [
-    'The Lord is my shepherd; I shall not want.',
-    'He maketh me to lie down in green pastures:',
-    'he leadeth me beside the still waters.',
-    'He restoreth my soul:',
-    "he leadeth me in the paths of righteousness for his name's sake.",
+    "'Twas brillig, and the slithy toves",
+    'Did gyre and gimble in the wabe:',
+    'All mimsy were the borogoves,',
+    'And the mome raths outgrabe.',
+    '',
+    '"Beware the Jabberwock, my son!',
+    'The jaws that bite, the claws that catch!',
+    'Beware the Jubjub bird, and shun',
+    'The frumious Bandersnatch!"',
   ].join('\n'),
 };
 
@@ -174,7 +178,7 @@ export function currentStep(progress) {
   return STEPS[progress.step];
 }
 
-/** The letters to type: "Shepherd;" → "shepherd", "Café" → "cafe", "—" → "". */
+/** The letters to type: "Brillig," → "brillig", "Café" → "cafe", "—" → "". */
 export function toKey(text) {
   return text
     .toLowerCase()
@@ -192,7 +196,7 @@ export function speakingSeconds(text) {
   return Math.round((wordCount(text) / SPEAKING_WORDS_PER_MINUTE) * 60);
 }
 
-/** "shepherd;" → "s;", "(Lord)" → "(L)", "name's" → "n". Chunks with no letters stay as they are. */
+/** "brillig," → "b,", "(wabe)" → "(w)", "name's" → "n". Chunks with no letters stay as they are. */
 function firstLetterOnly(chunk) {
   return chunk.replace(/^([^\p{L}\p{N}]*[\p{L}\p{N}])[\p{L}\p{N}'’-]*/u, '$1');
 }

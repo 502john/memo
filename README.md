@@ -61,7 +61,7 @@ Memo collects nothing and makes no third-party requests. The one exception is **
 
 - Look inspired by [Monkeytype](https://github.com/monkeytypegame/monkeytype)'s "serika" theme (colors and layout only).
 - [Roboto Mono](https://github.com/googlefonts/robotomono), under the SIL Open Font License (`fonts/OFL.txt`).
-- Sample text: Psalm 23 (King James Version, public domain in the US).
+- Sample text: the opening of "Jabberwocky" by Lewis Carroll (1871), public domain.
 
 ## License
 

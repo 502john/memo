@@ -113,7 +113,7 @@ function PassageEditor({ passage, onSave, onCancel }) {
 
   return el('form', { class: 'editor', onsubmit: submit },
     el('h3', {}, isEditing ? `Edit “${passage.title}”` : 'Add a passage'),
-    el('input', { name: 'title', placeholder: 'Title, e.g. Psalm 23', required: true, value: passage?.title }),
+    el('input', { name: 'title', placeholder: 'Title, e.g. Interview: biggest challenge', required: true, value: passage?.title }),
     el('textarea', {
       name: 'text',
       rows: 6,
